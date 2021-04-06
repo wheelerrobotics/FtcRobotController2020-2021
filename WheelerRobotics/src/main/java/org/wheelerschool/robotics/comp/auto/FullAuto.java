@@ -80,8 +80,12 @@ public class FullAuto extends LinearOpMode {
             while (runtime.seconds() < 1) {}
         }
 
-        bot.setDriveEncTranslate(1.f, 400, 0);
+        while(
+                !nav.moveTowardsTarget(new VectorF(50, 1100, 0),
+                        new Orientation(EXTRINSIC, XYZ, RADIANS, 0, 0, (float) (Math.PI/2), 0))
+                        && opModeIsActive()
+        ) {}
 
-        while (!bot.atDriveTarget()){}
+        bot.setDriveDirect(0,0,0,0);
     }
 }
