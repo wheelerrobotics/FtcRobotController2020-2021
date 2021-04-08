@@ -81,7 +81,7 @@ public class FullAuto extends LinearOpMode {
         }
 
         while(
-                !nav.moveTowardsTarget(new VectorF(50, 1100, 0),
+                !nav.moveTowardsTarget(new VectorF(500, 1100, 0),
                         new Orientation(EXTRINSIC, XYZ, RADIANS, 0, 0, (float) (Math.PI/2), 0))
                         && opModeIsActive()
         ) {}
