@@ -37,14 +37,26 @@ public class FullAuto extends LinearOpMode {
         bot.setDriveDirect(0,0,0,0);
     }
 
+    private void encoderWait() {
+        while (!bot.atDriveTarget() && opModeIsActive()) {}
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
-        CompBot bot = new CompBot(hardwareMap);
+        bot = new CompBot(hardwareMap);
         BotNav nav = new BotNav(bot);
 
         nav.activate();
 
-        waitForStart();
+        String ringStatus = null;
+        while (!isStarted()) {
+            String newStatus = nav.botVis.ringDetect();
+            if (newStatus != null) {
+                ringStatus = newStatus;
+            }
+            telemetry.addData("Ring Status", ringStatus);
+            telemetry.update();
+        }
 
         bot.setDriveEncTranslate(0.75f, 0, 500);
 
@@ -64,7 +76,8 @@ public class FullAuto extends LinearOpMode {
 
         }
 
-        bot.launcher(true);
+        bot.launchLeft.setPower(0.8f);
+        bot.launchRight.setPower(0.9f);
 
         bot.setDriveMotorMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -76,10 +89,44 @@ public class FullAuto extends LinearOpMode {
 
         bot.setDriveDirect(0,0,0,0);
 
-        barrage(4);
+        barrage(1);
         jiggle();
 
-        barrage(4);
+        barrage(1);
+        jiggle();
+
+        barrage(1);
+
+        if (ringStatus == null) {
+            while(
+                    !nav.moveTowardsTarget(new VectorF(600, 1000, 0),
+                            new Orientation(EXTRINSIC, XYZ, RADIANS, 0, 0, (float) (Math.PI/2), 0))
+                            && opModeIsActive()
+            ) {}
+            bot.setDriveEncRotate(1.f, 3000);
+            encoderWait();
+        } else if  (ringStatus.equals("Single")) {
+            while(
+                    !nav.moveTowardsTarget(new VectorF(600, 1000, 0),
+                            new Orientation(EXTRINSIC, XYZ, RADIANS, 0, 0, (float) (Math.PI/2), 0))
+                            && opModeIsActive()
+            ) {}
+            bot.setDriveEncRotate(1.f, 1500);
+            encoderWait();
+        } else if  (ringStatus.equals("Quad")) {
+            while(
+                    !nav.moveTowardsTarget(new VectorF(1600, 1000, 0),
+                            new Orientation(EXTRINSIC, XYZ, RADIANS, 0, 0, (float) (Math.PI/2), 0))
+                            && opModeIsActive()
+            ) {}
+            bot.setDriveEncRotate(1.f, 3000);
+            encoderWait();
+        }
+
+        bot.setWobbleArm(CompBot.WobblePosition.GRAB);
+        while (bot.wobbleArm.isBusy() && opModeIsActive()) {}
+        bot.setWobbleGrab(false);
+        //bot.setWobbleArm(CompBot.WobblePosition.UP);
 
         /*
         while(
