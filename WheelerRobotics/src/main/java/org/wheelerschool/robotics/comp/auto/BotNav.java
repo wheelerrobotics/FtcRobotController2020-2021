@@ -18,7 +18,7 @@ public class BotNav {
     private float maxPower = 0.75f;
     private float targetDeadband = 50; // mm
     private float targetRamp = 500; // mm
-    private float angleDeadband = (float) Math.PI / 24; // rad
+    private float angleDeadband = (float) Math.PI / 60.f; // rad
     private float angleRamp = (float) Math.PI / 4; // rad
 
     public BotNav(CompBot bot) {
