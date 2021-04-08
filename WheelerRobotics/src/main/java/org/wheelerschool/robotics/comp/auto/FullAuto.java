@@ -16,6 +16,26 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 @Autonomous
 public class FullAuto extends LinearOpMode {
     private ElapsedTime runtime = new ElapsedTime();
+    CompBot bot;
+
+    private void barrage(int attempts) {
+        for (int i=0; i<attempts; i++) {
+            bot.launchPush(true);
+            runtime.reset();
+            while (runtime.seconds() < 1 && opModeIsActive()) {}
+            bot.launchPush(false);
+            runtime.reset();
+            while (runtime.seconds() < 1 && opModeIsActive()) {}
+        }
+    }
+
+    private void jiggle() {
+        runtime.reset();
+        while (runtime.seconds() < 1) {
+            bot.jiggle();
+        }
+        bot.setDriveDirect(0,0,0,0);
+    }
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -56,35 +76,18 @@ public class FullAuto extends LinearOpMode {
 
         bot.setDriveDirect(0,0,0,0);
 
-        for (int i=0; i<4; i++) {
-            bot.launchPush(true);
-            runtime.reset();
-            while (runtime.seconds() < 1) {}
-            bot.launchPush(false);
-            runtime.reset();
-            while (runtime.seconds() < 1) {}
-        }
+        barrage(4);
+        jiggle();
 
-        runtime.reset();
-        while (runtime.seconds() < 1) {
-            bot.jiggle();
-        }
-        bot.setDriveDirect(0,0,0,0);
+        barrage(4);
 
-        for (int i=0; i<4; i++) {
-            bot.launchPush(true);
-            runtime.reset();
-            while (runtime.seconds() < 1) {}
-            bot.launchPush(false);
-            runtime.reset();
-            while (runtime.seconds() < 1) {}
-        }
-
+        /*
         while(
                 !nav.moveTowardsTarget(new VectorF(500, 1100, 0),
                         new Orientation(EXTRINSIC, XYZ, RADIANS, 0, 0, (float) (Math.PI/2), 0))
                         && opModeIsActive()
         ) {}
+         */
 
         bot.setDriveDirect(0,0,0,0);
     }
