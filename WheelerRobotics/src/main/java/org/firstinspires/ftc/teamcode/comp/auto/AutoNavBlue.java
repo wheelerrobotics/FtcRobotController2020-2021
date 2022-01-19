@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigu
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.sun.tools.javac.comp.Todo;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -33,7 +34,6 @@ public class AutoNavBlue extends LinearOpMode {
     }
     private void executeAutomaticSequence1(){
         // should get 26
-
         // auto for near carousel
         // gotta replace 0 with tested vals
             //meccanum.motorDriveRelativeFieldAngleEncoded(0, meccanum.NORMAL_SPEED, 775);
@@ -41,30 +41,47 @@ public class AutoNavBlue extends LinearOpMode {
 
             meccanum.closeServoFull();
             // ()
-            meccanum.delay(1000);
-            meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 775);
+            delay(1000);
+            meccanum.motorDriveEncodedReg(-meccanum.NORMAL_SPEED,
+                    -meccanum.NORMAL_SPEED,
+                    -meccanum.NORMAL_SPEED,
+                    -meccanum.NORMAL_SPEED,
+                    775,
+                    telemetry);
             // /\
             meccanum.turnDeg(-65, meccanum.SPIN_MOTORS_SPEED, telemetry);
             // ~>
-            meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1000);
+            meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1400);
             // |\
-            meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 300);
+            meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 350);
             // /\
             meccanum.openServoFull();
-            meccanum.delay(1000);
+            delay(100);
             // (_
             meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
             // \/
             meccanum.turnDeg(-25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
             // <~
-            meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED,200);
+            meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED,350);
             // <-
-            meccanum.motorDriveBackEncoded(1, 1300);
+            meccanum.motorDriveBackEncoded(1, 1600);
             // /\
+            meccanum.turnDeg(180, meccanum.SPIN_MOTORS_SPEED, telemetry);
+
+            delay(2000);
 
 
             //meccanum.motorDriveRelativeFieldAngleEncoded(90, meccanum.NORMAL_SPEED, 700);
     }
+    public void delay(double time){
+        if(time <= 100) meccanum.delay(time);
+        else if(opModeIsActive()){
+            meccanum.delay(100);
+            delay(time - 100);
+        }
+        else return;
+    }
+
 
 
 

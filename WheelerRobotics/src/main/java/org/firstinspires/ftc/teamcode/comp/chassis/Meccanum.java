@@ -8,6 +8,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sin;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.ColorUtils;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
@@ -34,13 +35,14 @@ public class Meccanum {
 
     public double rx;
 
+
     public final String SINGLEPLAYER_CONTROL = "SINGLEPLAYER";
     public final String MULTIPLAYER_CONTROL = "MULTIPLAYER";
 
     public final double NORMAL_SPEED = 0.2; // preference and feel for best
-    public final double SERVO_FULLY_CLOSED = 0; // need arm+hub to test this
-    public final double SERVO_FULLY_OPENED = 1; // need arm+hub to test this
-    public final double HALF_SERVO_ANGLE = 0; // need arm+hub to test for this, can probably just average full open/close
+    public final double SERVO_FULLY_CLOSED = 0 ; // need arm+hub to test this left
+    public final double SERVO_FULLY_OPENED = 1; // need arm+hub to test this right
+    public final double HALF_SERVO_ANGLE = 0.5; // need arm+hub to test for this, can probably just average full open/close   left
     public final double ARM_MAX_SPEED = -   0.5; // preference? or maybe to be precise
     public final double HIGH_SPINNER_POWER = 1; // probably max, may need to adjust later
     public final double OPTIMAL_SPINNER_POWER = 0.5; // need spinner+hub to test this
@@ -119,9 +121,14 @@ public class Meccanum {
         motorFrontRight.setPower(motorFrontRightPower);
     }
 
-    private void motorDriveEncoded(double motorFrontLeftPower, double motorBackLeftPower, double motorFrontRightPower, double motorBackRightPower, double ticks){
+    private void motorDriveEncoded(double motorFrontLeftPower, double motorBackLeftPower, double motorFrontRightPower, double motorBackRightPower, int ticks){
         // private I think bcuz only ever accessed inside the class
         // motors need to use encoder
+
+        motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -144,7 +151,10 @@ public class Meccanum {
         int flp = motorFrontLeft.getCurrentPosition();
         int frp = motorFrontRight.getCurrentPosition();
 
-        while(abs(motorBackLeft.getCurrentPosition() - blp) < ticks || abs(motorFrontRight.getCurrentPosition() - blp) < ticks || abs(motorFrontLeft.getCurrentPosition() - blp) < ticks || abs(motorBackRight.getCurrentPosition() - blp) < ticks) { // hopefully checks that it is within the positive or negative threshold of target ticks
+        while(abs(motorBackLeft.getCurrentPosition() - blp) < ticks ||
+                abs(motorFrontRight.getCurrentPosition() - brp) < ticks ||
+                abs(motorFrontLeft.getCurrentPosition() - flp) < ticks ||
+                abs(motorBackRight.getCurrentPosition() - frp) < ticks) { // hopefully checks that it is within the positive or negative threshold of target ticks
             motorDrive(motorFrontLeftPower, motorBackLeftPower, motorFrontRightPower, motorBackRightPower);
         }
         motorStop();
@@ -179,7 +189,7 @@ public class Meccanum {
         double motorBackRightPowerCorrected = motorBackRightPower;
         double motorFrontRightPowerCorrected = motorFrontRightPower;
         float startDegrees = getAngles().firstAngle;
-        double LOCAL_PROPORTION = 0.04;
+        double LOCAL_PROPORTION = 0.04 ;
 
         while((abs(motorBackLeft.getCurrentPosition() - blp) + abs(motorFrontRight.getCurrentPosition() - frp) + abs(motorFrontLeft.getCurrentPosition() - flp) + abs(motorBackRight.getCurrentPosition() - brp))/4  < ticks) { // hopefully checks that it is within the positive or negative threshold of target ticks
             double difference = AngleUnit.normalizeDegrees(getAngles().firstAngle - startDegrees);
@@ -202,12 +212,8 @@ public class Meccanum {
         motorStop();
     }
 
-
     public void motorDriveTime(double motorFrontLeftPower, double motorBackLeftPower, double motorFrontRightPower, double motorBackRightPower, double time){
-        motorBackLeft.setPower(motorBackLeftPower);
-        motorFrontLeft.setPower(motorFrontLeftPower);
-        motorBackRight.setPower(motorBackRightPower);
-        motorFrontRight.setPower(motorFrontRightPower);
+        motorDrive(motorFrontLeftPower, motorBackLeftPower, motorFrontRightPower, motorBackRightPower);
         delay(time);
         motorStop();
     }
@@ -318,16 +324,16 @@ public class Meccanum {
         motorDrive(-speed, -speed, -speed, -speed);
     }
 
-    public void motorDriveForwardEncoded(double speed, double distance){
+    public void motorDriveForwardEncoded(double speed, int distance){
         motorDriveEncoded(-speed, -speed, -speed, -speed, distance);
     }
-    public void motorDriveLeftEncoded(double speed, double distance){
-        motorDriveEncoded(speed, -speed, speed, -speed, distance);
+    public void motorDriveLeftEncoded(double speed, int distance){
+        motorDriveEncoded(-speed, speed, speed, -speed, distance);
     }
-    public void motorDriveRightEncoded(double speed, double distance){
+    public void motorDriveRightEncoded(double speed, int distance){
         motorDriveEncoded(speed, -speed, -speed, speed, distance);
     }
-    public void motorDriveBackEncoded(double speed, double distance){
+    public void motorDriveBackEncoded(double speed, int distance){
         motorDriveEncoded(speed, speed, speed, speed, distance);
     }
     public void motorDriveForwardTime(double speed, double time){
@@ -364,10 +370,10 @@ public class Meccanum {
         motorDrive(speed, speed, -speed, -speed);
     }
 
-    public void motorSpinLeftEncoded(double speed, double distance){
+    public void motorSpinLeftEncoded(double speed, int distance){
         motorDriveEncoded(-speed, -speed, speed, speed, distance);
     }
-    public void motorSpinRightEncoded(double speed, double distance){
+    public void motorSpinRightEncoded(double speed, int distance){
         motorDriveEncoded(speed, speed, -speed, -speed, distance);
     }
 

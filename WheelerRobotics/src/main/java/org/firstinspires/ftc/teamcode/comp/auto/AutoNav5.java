@@ -41,7 +41,20 @@ public class AutoNav5 extends LinearOpMode {
 
         // auto for near carousel
         // gotta replace 0 with tested vals
-        meccanum.motorDriveEncodedReg(-0.5, -0.5, -0.5, -0.5, 1000000, telemetry);
+        meccanum.motorDriveEncodedReg(-0.3, -0.3, -0.3, -0.3, 1000, telemetry);
+        meccanum.delay(1000);
+        meccanum.motorStop();
+        meccanum.motorDriveForwardEncoded(0.5, 1000);
+        meccanum.delay(1000);
+        meccanum.motorStop();
+        meccanum.motorDriveForwardTime(0.5, 1000);
+        meccanum.delay(1000);
+        meccanum.motorStop();
+        meccanum.motorDrive(0.5, 0.5, 0.5, 0.5);
+        meccanum.delay(1000);
+        meccanum.motorStop();
+
+
     }
 
 }

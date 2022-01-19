@@ -15,6 +15,10 @@ public class ControllerMap {
     private Meccanum meccanum;
     private Gamepad gamepad1;
     private Gamepad gamepad2;
+
+    private boolean gp2ldown;
+    private boolean gp2lup;
+
     public void init(Meccanum mec, Gamepad gp1, Gamepad gp2){
         meccanum = mec;
         gamepad1 = gp1;
@@ -22,11 +26,13 @@ public class ControllerMap {
 
     }
 
-    private void leftBumper(){
+    private void leftBumper(boolean on){
+        if (on) gamepad2.rumble(10);
+        else gamepad2.stopRumble();
+
 
     }
     private void rightBumper(){
-
     }
     private void buttonB(){
 
@@ -121,13 +127,15 @@ public class ControllerMap {
     }
 
     private void joystickDriver2(){
-       meccanum.rx += gamepad2.right_stick_x/8;
+       //meccanum.rx += gamepad2.right_stick_x/8;
     }
 
     public void checkControls(){
         joystickDriver(0.4);
         if (gamepad1.left_bumper){
-            leftBumper();
+            leftBumper(true);
+        }else{
+            leftBumper(false);
         }
         if (gamepad1.right_bumper){
             rightBumper();

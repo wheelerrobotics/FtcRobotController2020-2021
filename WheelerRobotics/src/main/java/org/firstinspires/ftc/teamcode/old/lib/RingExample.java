@@ -6,12 +6,12 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 @Autonomous
 public class RingExample extends OpMode {
-    CompBot bot;
+    org.wheelerschool.robotics.old.lib.CompBot bot;
     BotNav nav;
 
     @Override
     public void init() {
-        bot = new CompBot(hardwareMap);
+        bot = new org.wheelerschool.robotics.old.lib.CompBot(hardwareMap);
         nav = new BotNav(bot);
     }
 

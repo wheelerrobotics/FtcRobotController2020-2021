@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.wheelerschool.robotics.old.lib.CompBot;
-import org.wheelerschool.robotics.comp.auto.BotNav;
 
 @Autonomous
 public class EncoderTranslateExample extends LinearOpMode {

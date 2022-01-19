@@ -70,11 +70,11 @@ public class ControllerMapSINGLE {
         gamepad1.rumble(time);
     }
     private void joystickDriver(double scale){
-        meccanum.motorDriveXYVectors(gamepad1.left_stick_x * scale, gamepad1.left_stick_y * scale, gamepad1.right_stick_x * 0.6);
+        meccanum.motorDriveXYVectors(gamepad1.left_stick_x * scale, gamepad1.left_stick_y * scale, gamepad1.right_stick_x * scale);
     }
 
     public void checkControls(){
-        joystickDriver(0.8);
+        joystickDriver(0.2);
         if (gamepad1.left_bumper){
             leftBumper();
         }
