@@ -410,6 +410,8 @@ public class FtcRobotControllerActivity extends Activity
     checkPreferredChannel();
 
     AnnotatedHooksClassFilter.getInstance().callOnCreateMethods(this);
+
+    
   }
 
   protected UpdateUI createUpdateUI() {

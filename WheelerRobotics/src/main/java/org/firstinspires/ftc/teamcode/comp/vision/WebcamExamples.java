@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode.comp.vision;
-
 /*
  * Copyright (c) 2019 OpenFTC Team
  *
@@ -21,10 +20,13 @@ package org.firstinspires.ftc.teamcode.comp.vision;
  * SOFTWARE.
  */
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.sun.tools.javac.util.List;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.internal.android.dx.rop.cst.CstArray;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -34,9 +36,12 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
+import org.tensorflow.lite.support.image.ImageProcessor;
+
+import java.util.ArrayList;
 
 @TeleOp
-public class WebcamExample extends LinearOpMode
+public class WebcamExamples extends LinearOpMode
 {
     OpenCvWebcam webcam;
 
@@ -98,6 +103,8 @@ public class WebcamExample extends LinearOpMode
                  * away from the user.
                  */
                 webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+                FtcDashboard.getInstance().getTelemetry().addData("WEDABEST", "Frfr");
+                FtcDashboard.getInstance().getTelemetry().update();
             }
 
             @Override
@@ -106,6 +113,8 @@ public class WebcamExample extends LinearOpMode
                 /*
                  * This will be called if the camera could not be opened
                  */
+                FtcDashboard.getInstance().getTelemetry().addData("Crashed", "camera");
+                FtcDashboard.getInstance().getTelemetry().update();
             }
         });
 
@@ -116,6 +125,7 @@ public class WebcamExample extends LinearOpMode
          * Wait for the user to press start on the Driver Station
          */
         waitForStart();
+        webcam.startStreaming(320, 240);
 
         while (opModeIsActive())
         {
@@ -156,7 +166,7 @@ public class WebcamExample extends LinearOpMode
                  * time. Of course, this comment is irrelevant in light of the use case described in
                  * the above "important note".
                  */
-                webcam.stopStreaming();
+                //webcam.stopStreaming();
                 //webcam.closeCameraDevice();
             }
 
@@ -165,7 +175,7 @@ public class WebcamExample extends LinearOpMode
              * excess CPU cycles for no reason. (By default, telemetry is only sent to the DS at 4Hz
              * anyway). Of course in a real OpMode you will likely not want to do this.
              */
-            sleep(100);
+            //sleep(100);
         }
     }
 
@@ -207,23 +217,88 @@ public class WebcamExample extends LinearOpMode
              * of this particular frame for later use, you will need to either clone it or copy
              * it to another Mat.
              */
-            telemetry.addData("Img (10, 10) : ", input.get(10, 10));
+
             /*
              * Draw a simple box around the middle 1/2 of the entire frame
              */
-            int x = 0;
-            int y = 0;
+
+            // 165 154 235
+            // 85 72 154
+            ArrayList<ArrayList<Integer>> detect = new ArrayList<ArrayList<Integer>>();
+
+            int quality = 5;
+
+                for(int i = 0; i<input.rows(); i+=quality){
+
+                    ArrayList<Integer> nowList = new ArrayList<Integer>();
+                    for(int e = 0; e<input.cols(); e+=quality){
+                            if (input.get(i, e)[0] > 85 && input.get(i, e)[0] < 165 &&
+                                    input.get(i, e)[1] > 72 && input.get(i, e)[1] < 154 &&
+                                    input.get(i, e)[2] > 150 && input.get(i, e)[2] < 240) {
+                                nowList.add(1);
+                                //Imgproc.circle(input, new Point(e, i), 0, new Scalar(input.get(i, e)[0], 0, input.get(i, e)[2]), quality);
+                            } else {
+                                Imgproc.circle(input, new Point(e, i), 0, new Scalar(255, 0, 0), quality);
+                                nowList.add(0);
+                            }
+                    }
+                    detect.add(nowList);
+                }
 
 
-            Imgproc.rectangle(
-                    input,
-                    new Point(
-                            input.cols()/4,
-                            input.rows()/4),
-                    new Point(
-                            input.cols()*(3f/4f),
-                            input.rows()*(3f/4f)),
-                    new Scalar(0, 255, 0), 4);
+            for(int i = 0; i<input.rows()/quality; i++){
+                for(int e = 0; e<input.cols()/quality; e++){
+                    if(detect.get(i).get(e) > 0){
+                        // close neighbors + 2
+                        if(e-1 >= 0) if(detect.get(i).get(e-1) !=0) detect.get(i).set(e-1, detect.get(i).get(e-1) + 3);
+                        if(e+1 < detect.get(i).size()-1) if(detect.get(i).get(e+1) !=0) detect.get(i).set(e+1, detect.get(i).get(e+1) + 3);
+                        if(i-1 >= 0) if(detect.get(i-1).get(e) !=0) detect.get(i-1).set(e, detect.get(i-1).get(e) + 3);
+                        if(i+1 < detect.size()-1) if(detect.get(i+1).get(e) !=0) detect.get(i+1).set(e, detect.get(i+1).get(e) + 3);
+
+                        // corners
+                        if(e-1 >= 0 && i-1 >= 0) if(detect.get(i-1).get(e-1) !=0) detect.get(i-1).set(e-1, detect.get(i-1).get(e-1) + 2);
+                        if(e+1 < detect.get(i).size()-1 && i-1 >= 0) if(detect.get(i-1).get(e+1) !=0) detect.get(i-1).set(e+1, detect.get(i-1).get(e+1) + 2);
+                        if(e-1 >= 0 && i+1 < detect.size()-1) if(detect.get(i+1).get(e-1) !=0) detect.get(i+1).set(e-1, detect.get(i+1).get(e-1) + 2);
+                        if(e+1 < detect.get(i).size()-1 && i+1 < detect.size()-1) if(detect.get(i+1).get(e+1) !=0) detect.get(i+1).set(e+1, detect.get(i+1).get(e+1) + 2);
+
+                        // 2 away
+                        if(i-2 >= 0) if(detect.get(i-2).get(e) !=0) detect.get(i-2).set(e, detect.get(i-2).get(e) + 1);
+                        if(i+2 < detect.size()-2) if(detect.get(i+2).get(e) !=0) detect.get(i+2).set(e, detect.get(i+2).get(e) + 1);
+                        if(e-2 >= 0) if(detect.get(i).get(e-2) !=0) detect.get(i).set(e-2, detect.get(i).get(e-2) + 1);
+                        if(e+2 < detect.get(i).size()-2) if(detect.get(i).get(e+2) !=0) detect.get(i).set(e+2, detect.get(i).get(e+2) + 1);
+
+                    }
+                }
+            }
+            int cmax = 0;
+            ArrayList<ArrayList<Integer>> maxes = new ArrayList<ArrayList<Integer>>();
+            for(int i = 0; i<detect.size(); i++) {
+                for (int e = 0; e < detect.get(i).size(); e++) {
+                    if(detect.get(i).get(e) > cmax){
+                        cmax = detect.get(i).get(e);
+                    }
+                }
+            }
+
+            for(int i = 0; i<detect.size(); i++){
+                for(int e = 0; e<detect.get(i).size(); e++){
+                    if(detect.get(i).get(e) >= cmax){
+                        ArrayList<Integer> newPoint = new ArrayList<Integer>();
+                        newPoint.add(e);
+                        newPoint.add(i);
+                        maxes.add(newPoint);
+                        FtcDashboard.getInstance().getTelemetry().addData("mac", cmax);
+                        FtcDashboard.getInstance().getTelemetry().addData("detect", detect);
+                        FtcDashboard.getInstance().getTelemetry().update();
+                    }
+                }
+            }
+            for(ArrayList<Integer> point : maxes){
+                Imgproc.circle(input, new Point(point.get(0)*quality, point.get(1)*quality), 0, new Scalar(255, 150, 0), quality);
+            }
+
+
+
 
             /**
              * NOTE: to see how to get data from your pipeline to your OpMode as well as how
@@ -249,7 +324,7 @@ public class WebcamExample extends LinearOpMode
              * Here we demonstrate dynamically pausing/resuming the viewport when the user taps it
              */
 
-            viewportPaused = !viewportPaused;
+            /* viewportPaused = !viewportPaused;
 
             if(viewportPaused)
             {
@@ -258,7 +333,9 @@ public class WebcamExample extends LinearOpMode
             else
             {
                 webcam.resumeViewport();
-            }
+            }*/
         }
     }
 }
+
+

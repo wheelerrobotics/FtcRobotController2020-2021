@@ -1,0 +1,38 @@
+{
+  "0": {
+    "type": "LINE",
+    "distance": 100,
+    "speed": 0.5,
+    "angle": 90,
+    "relative": true,
+    "right": true
+  },
+  "1": {
+    "type": "CLAW",
+    "open": false
+  },
+  "2": {
+    "type": "SPINNER",
+    "time": 100,
+    "speed": 1
+  },
+  "3": {
+    "type": "ARM",
+    "angle": 90,
+    "speed": 1
+  },
+  "4": {
+    "type": "TURN",
+    "angle": 90,
+    "relative": true,
+    "right": false
+},
+  "5": {
+  "type": "NOISE",
+  "file": "path/to/file"
+},
+  "6": {
+    "type": "WAIT",
+    "time": 1000
+  }
+}
