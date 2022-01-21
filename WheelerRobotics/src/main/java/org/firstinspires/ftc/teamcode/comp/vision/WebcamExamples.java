@@ -197,7 +197,7 @@ public class WebcamExamples extends LinearOpMode
     class SamplePipeline extends OpenCvPipeline
     {
         boolean viewportPaused;
-
+        int quality = 5;
         /*
          * NOTE: if you wish to use additional Mat objects in your processing pipeline, it is
          * highly recommended to declare them here as instance variables and re-use them for
@@ -225,8 +225,6 @@ public class WebcamExamples extends LinearOpMode
             // 165 154 235
             // 85 72 154
             ArrayList<ArrayList<Integer>> detect = new ArrayList<ArrayList<Integer>>();
-
-            int quality = 5;
 
                 for(int i = 0; i<input.rows(); i+=quality){
 
@@ -335,7 +333,76 @@ public class WebcamExamples extends LinearOpMode
                 webcam.resumeViewport();
             }*/
         }
+        public void regress(Mat input, ArrayList<ArrayList<Integer>> detect){
+            // this function goes through all pixels in the specified color range
+            // for each it increases its neighbors probability if they are in the color range
+            /*
+
+            This is the way it adds to probability
+            x: the current target pixel
+
+            |0|0|1|0|0|
+            |0|2|3|2|0|
+            |1|3|x|3|1|
+            |0|2|3|2|0|
+            |0|0|1|0|0|
+
+            It then goes through each logging the highest scored pixel
+            These pixels are then isolated and the same process is performed until there are however many masses detected
+             */
+
+            for(int i = 0; i<input.rows()/quality; i++){
+                for(int e = 0; e<input.cols()/quality; e++){
+                    if(detect.get(i).get(e) > 0){
+
+
+                        // close neighbors +3
+                        if(e-1 >= 0) if(detect.get(i).get(e-1) !=0) detect.get(i).set(e-1, detect.get(i).get(e-1) + 3);
+                        if(e+1 < detect.get(i).size()-1) if(detect.get(i).get(e+1) !=0) detect.get(i).set(e+1, detect.get(i).get(e+1) + 3);
+                        if(i-1 >= 0) if(detect.get(i-1).get(e) !=0) detect.get(i-1).set(e, detect.get(i-1).get(e) + 3);
+                        if(i+1 < detect.size()-1) if(detect.get(i+1).get(e) !=0) detect.get(i+1).set(e, detect.get(i+1).get(e) + 3);
+
+                        // corners +2
+                        if(e-1 >= 0 && i-1 >= 0) if(detect.get(i-1).get(e-1) !=0) detect.get(i-1).set(e-1, detect.get(i-1).get(e-1) + 2);
+                        if(e+1 < detect.get(i).size()-1 && i-1 >= 0) if(detect.get(i-1).get(e+1) !=0) detect.get(i-1).set(e+1, detect.get(i-1).get(e+1) + 2);
+                        if(e-1 >= 0 && i+1 < detect.size()-1) if(detect.get(i+1).get(e-1) !=0) detect.get(i+1).set(e-1, detect.get(i+1).get(e-1) + 2);
+                        if(e+1 < detect.get(i).size()-1 && i+1 < detect.size()-1) if(detect.get(i+1).get(e+1) !=0) detect.get(i+1).set(e+1, detect.get(i+1).get(e+1) + 2);
+
+                        // 2 away +1
+                        if(i-2 >= 0) if(detect.get(i-2).get(e) !=0) detect.get(i-2).set(e, detect.get(i-2).get(e) + 1);
+                        if(i+2 < detect.size()-2) if(detect.get(i+2).get(e) !=0) detect.get(i+2).set(e, detect.get(i+2).get(e) + 1);
+                        if(e-2 >= 0) if(detect.get(i).get(e-2) !=0) detect.get(i).set(e-2, detect.get(i).get(e-2) + 1);
+                        if(e+2 < detect.get(i).size()-2) if(detect.get(i).get(e+2) !=0) detect.get(i).set(e+2, detect.get(i).get(e+2) + 1);
+
+                    }
+                }
+            }
+
+            int cmax = 0; // variable for current max value
+
+            // to isolate the max value
+            for(int i = 0; i<detect.size(); i++) {
+                for (int e = 0; e < detect.get(i).size(); e++) {
+                    if(detect.get(i).get(e) > cmax){
+                        cmax = detect.get(i).get(e);
+                    }
+                }
+            }
+
+            // to reset the detection list and eliminate the less likely pixels
+            for(int i = 0; i<detect.size(); i++){
+                for(int e = 0; e<detect.get(i).size(); e++){
+                    if(detect.get(i).get(e) >= cmax){
+                        detect.get(i).set(e, 1);
+                    }else{
+                        detect.get(i).set(e, 0);
+                    }
+                }
+            }
+
+        }
     }
+
 }
 
 
