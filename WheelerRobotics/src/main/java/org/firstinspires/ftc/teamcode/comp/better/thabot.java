@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.comp.chassis;
+package org.firstinspires.ftc.teamcode.comp.better;
 
 
 import static java.lang.Math.abs;
@@ -7,23 +7,17 @@ import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.sin;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.SensorREV2mDistance;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -32,7 +26,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import javax.lang.model.type.NoType;
 
-public class Meccanum {
+public class thabot {
 
     private final ElapsedTime runtime = new ElapsedTime(); // getting a warning to make it final
 
@@ -69,19 +63,9 @@ public class Meccanum {
 
     private Orientation angles;
 
-    public HardwareMap hw;
+    public HardwareMap hw; // no idea if volatile means anything (impactful) in this context, but it makes me seem like I know what im doing
 
     private float INITIAL_ANGLE;
-
-    public FtcDashboard dash = FtcDashboard.getInstance();
-
-    private SensorREV2mDistance distanceBack;
-    private SensorREV2mDistance distanceRight;
-    private SensorREV2mDistance distanceLeft;
-
-
-    private int startupID;
-    private Context appContext;
 
 
     public void init(@NonNull HardwareMap hardwareMap){
@@ -101,13 +85,7 @@ public class Meccanum {
 
         INITIAL_ANGLE = getAngles().firstAngle;
 
-        //distace sensors
-        /*distanceBack = hw.get(SensorREV2mDistance.class, "distanceBack");
-        distanceRight = hw.get(SensorREV2mDistance.class, "distanceRight");
-        distanceLeft = hw.get(SensorREV2mDistance.class, "distanceLeft");*/
-
         // Meccanum Motors Definition and setting prefs
-
         motorFrontLeft = hardwareMap.dcMotor.get("motorFrontLeft");
         motorBackLeft = hardwareMap.dcMotor.get("motorBackLeft");
         motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
@@ -143,12 +121,6 @@ public class Meccanum {
         motorFrontRight.setPower(motorFrontRightPower);
     }
 
-    public void playSound(String filename){
-        startupID = hw.appContext.getResources().getIdentifier(filename, "raw", hw.appContext.getPackageName());
-        appContext = hw.appContext;
-        SoundPlayer.getInstance().startPlaying(appContext, startupID);
-    }
-
     private void motorDriveEncoded(double motorFrontLeftPower, double motorBackLeftPower, double motorFrontRightPower, double motorBackRightPower, int ticks){
         // private I think bcuz only ever accessed inside the class
         // motors need to use encoder
@@ -162,13 +134,6 @@ public class Meccanum {
         motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        /*
-        final int blp = motorBackLeft.getCurrentPosition(); // idk if this will stay a static value or if it will change with the motor pos, hmm...
-        final int brp = motorBackRight.getCurrentPosition();
-        final int frp = motorFrontRight.getCurrentPosition();
-        final int flp = motorFrontLeft.getCurrentPosition();
-        */
         // only checking one motor for ticks rotated rn, should probably check all of them
 
         // NOTE: not using DcMotor.setTarget() method despite it's built in pid functionality, maybe implement in future, but I dont know if it will stall the program or not like the while loop
@@ -246,7 +211,7 @@ public class Meccanum {
         motorStop();
     }
 
-    public void motorDriveRelativeAngleEncoded(double radians, double speed, double ticks){
+    public void motorDriveRelativeFieldAngleEncoded(double radians, double speed, double ticks){
         //test on monday 11/29/2021
         //NOTE
         // im not sure how to acurately do this using encoders, because some wheels are going to spin at different powers (I think)
@@ -326,12 +291,17 @@ public class Meccanum {
 
     }
 
+    public void motorDriveRelativeAngleTime(double radians, double speed, double time){
+        motorDriveRelativeFieldAngleEncoded(radians, speed, 1); //t his is so no error, NEED CHANGE NOT RIGHT
+        delay(time);
+        motorStop();
+    }
 
     public void motorStop(){
-        motorBackLeft.setPower(MOTOR_STOP);
-        motorFrontLeft.setPower(MOTOR_STOP);
-        motorBackRight.setPower(MOTOR_STOP);
-        motorFrontRight.setPower(MOTOR_STOP);
+        motorBackLeft.setPower(0);
+        motorFrontLeft.setPower(0);
+        motorBackRight.setPower(0);
+        motorFrontRight.setPower(0);
     }
 
     public void motorDriveForward(double speed){

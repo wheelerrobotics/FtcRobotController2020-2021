@@ -57,7 +57,7 @@ import java.io.File;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="servotest", group="Demos")
+@TeleOp(name="Daniel's Wonderful Coding Adventure", group="CC")
 public class servotest extends LinearOpMode {
 
     // Declare OpMode members.
@@ -100,6 +100,11 @@ public class servotest extends LinearOpMode {
 
             Orientation angles = meccanum.getAngles();
             telemetry.addData("angle", meccanum.getServo());
+            telemetry.addData("gp2l", gamepad2.left_trigger);
+            telemetry.addData("gp2r", gamepad2.right_trigger);
+            telemetry.addData("gp1l", gamepad1.left_trigger);
+            telemetry.addData("gp1r", gamepad1.right_trigger);
+
             cm.checkControls();
             cm.checkControls2();
 

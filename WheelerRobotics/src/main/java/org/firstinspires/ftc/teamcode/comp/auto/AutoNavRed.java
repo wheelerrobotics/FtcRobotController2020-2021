@@ -27,20 +27,71 @@ public class AutoNavRed extends LinearOpMode {
     public void runOpMode() {
         meccanum.init(hardwareMap);
         waitForStart();
-        while(opModeIsActive()){
-            executeAutomaticSequence1();
-        }
-    }
-    private void executeAutomaticSequence1(){
-        // should get 26
+        executeAutomaticSequence1();
 
+    }
+    private void executeAutomaticSequence1() {
+        // should get 26
         // auto for near carousel
         // gotta replace 0 with tested vals
-        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 700);
-        meccanum.turnToDeg(-90, 0.4);
-        meccanum.motorDriveForwardEncoded(1, 1200);
-        // /\
+        //meccanum.motorDriveRelativeFieldAngleEncoded(0, meccanum.NORMAL_SPEED, 775);
+        // meccanum.turnDeg(90, 90, telemetry);
+        /*
+        JsonParser jp = new JsonParser();
+        Object obj = jp.parse(new FileReader("./jsons/gameplanB.json"));
+        JSONObject gameplan = (JSONObject) obj;
+        for (Iterator<String> it = gameplan.keys(); it.hasNext(); ) {
+            String k = it.next();
+            String key = it.next();
+            // this approach will be synchronous, but it could be async with a "completed" tag in the json move
 
+            parseMove(gameplan.get(key));
+
+        }*/
+
+
+        meccanum.closeServoFull();
+        // ()
+        delay(1000);
+        meccanum.motorDriveEncodedReg(-meccanum.NORMAL_SPEED,
+                -meccanum.NORMAL_SPEED,
+                -meccanum.NORMAL_SPEED,
+                -meccanum.NORMAL_SPEED,
+                775,
+                telemetry);
+        // /\
+        meccanum.turnDeg(65, meccanum.SPIN_MOTORS_SPEED, telemetry);
+        // ~>
+        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1500);
+        // |\
+        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 350);
+        // /\
+        meccanum.openServoFull();
+        delay(1000);
+        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 400);
+        // (_
+        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
+        // \/
+        meccanum.turnDeg(25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
+        // <~
+        meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED,350);
+        // <-
+        meccanum.motorDriveBackEncoded(1, 1400);
+        // /\
+        meccanum.turnDeg(180, meccanum.SPIN_MOTORS_SPEED, telemetry);
+
+        delay(2000);
+
+
+        //meccanum.motorDriveRelativeFieldAngleEncoded(90, meccanum.NORMAL_SPEED, 700);
+    }
+    public void delay(double time){
+        if(time <= 100) meccanum.delay(time);
+        else if(opModeIsActive()){
+            meccanum.delay(100);
+            delay(time - 100);
+        }
+        else return;
     }
 
 

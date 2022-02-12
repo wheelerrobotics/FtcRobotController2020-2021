@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode.comp.driver;
 import android.content.Context;
 
 import com.qualcomm.ftccommon.SoundPlayer;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -58,6 +59,7 @@ import java.io.File;
  */
 
 @TeleOp(name="cts", group="Demos")
+@Disabled
 public class cts extends LinearOpMode {
 
     // Declare OpMode members.

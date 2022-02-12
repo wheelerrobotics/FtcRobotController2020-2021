@@ -1,9 +1,14 @@
 package org.firstinspires.ftc.teamcode.comp.vision;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
+import androidx.annotation.NonNull;
+import androidx.core.graphics.ColorUtils;
+
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.sun.tools.javac.util.List;
@@ -22,8 +27,11 @@ import org.openftc.easyopencv.OpenCvWebcam;
 import org.tensorflow.lite.support.image.ImageProcessor;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 
 @TeleOp
+@Disabled
 public class SophistocatedAlgorithm extends LinearOpMode
 {
     OpenCvWebcam webcam;
@@ -51,8 +59,10 @@ public class SophistocatedAlgorithm extends LinearOpMode
             {
                 // i think this is supposed to stream to the hub, but it doesnt work :/
                 webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
-                FtcDashboard.getInstance().getTelemetry().addData("WEDABEST", "Frfr");
-                FtcDashboard.getInstance().getTelemetry().update();
+                FtcDashboard.getInstance().startCameraStream(webcam, 20);
+
+                // 145-155
+                //
             }
             @Override
             public void onError(int errorCode)
@@ -102,6 +112,8 @@ public class SophistocatedAlgorithm extends LinearOpMode
         public Mat processFrame(Mat input)
         {
 
+
+
             /*COLORS
 
             *note: some wont really work and that is because the low red might be more than the high red
@@ -145,6 +157,9 @@ public class SophistocatedAlgorithm extends LinearOpMode
             }
 
             regress(input, detect, 2); // run algo twice
+
+
+
 
             ArrayList<ArrayList<Integer>> maxes = new ArrayList<ArrayList<Integer>>(); // a list showing where to draw positive circles
             // similar to regress function but different, this time it is to draw and visualize the points instead of log them

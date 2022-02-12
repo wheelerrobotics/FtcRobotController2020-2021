@@ -50,12 +50,13 @@ public class AutoNavBlueC extends LinearOpMode {
         // /\
         meccanum.turnDeg(65, meccanum.SPIN_MOTORS_SPEED, telemetry);
         // ~>
-        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1000);
+        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1500);
         // |\
         meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 300);
         // /\
         meccanum.openServoFull();
-        delay(100);
+        delay(1000);
+        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 300);
         // (_
         meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
         // \/
@@ -67,14 +68,14 @@ public class AutoNavBlueC extends LinearOpMode {
         meccanum.motorDriveBackEncoded(0.5, 2*FOOT+140);
         // /\
         meccanum.delay(2000);
-        // /\
+        //
         // here you are facing the warehouse
-        meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, (int) floor(2*FOOT*SIDEWAYST + 50));
+        meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, (int) floor(2*FOOT*SIDEWAYST + 110));
         // ->
         meccanum.spinnySpinTime(meccanum.OPTIMAL_SPINNER_POWER, 2000);
         // *
         // /\
-        meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED, (int) floor(2*FOOT*SIDEWAYST + 50));
+        meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED, (int) floor(2*FOOT*SIDEWAYST + 40));
         delay(1000);
         meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, (int) floor(100));
         // ->

@@ -72,12 +72,13 @@ public class AutoNavBlue extends LinearOpMode {
             // /\
             meccanum.turnDeg(-65, meccanum.SPIN_MOTORS_SPEED, telemetry);
             // ~>
-            meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1400);
+            meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1500);
             // |\
             meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 350);
             // /\
             meccanum.openServoFull();
-            delay(100);
+            delay(1000);
+            meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 400);
             // (_
             meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
             // \/
@@ -85,7 +86,7 @@ public class AutoNavBlue extends LinearOpMode {
             // <~
             meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED,350);
             // <-
-            meccanum.motorDriveBackEncoded(1, 1600);
+            meccanum.motorDriveBackEncoded(1, 1400);
             // /\
             meccanum.turnDeg(180, meccanum.SPIN_MOTORS_SPEED, telemetry);
 
