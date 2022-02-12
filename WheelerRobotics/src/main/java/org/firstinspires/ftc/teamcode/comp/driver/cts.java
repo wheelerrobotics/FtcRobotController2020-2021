@@ -90,7 +90,6 @@ public class cts extends LinearOpMode {
         while (opModeIsActive()) {
 
             Orientation angles = meccanum.getAngles();
-            telemetry.addData("angle", meccanum.getServo());
             cms.checkControls();
 
             //telemetry.addData("test", "test!");

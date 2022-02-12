@@ -34,7 +34,7 @@ class ColorIsolationPipeline extends OpenCvPipeline
     private int conePosition = 0;
 
     public enum processors { OFF, SIMPLE, COMPLEX }
-    private processors processorSetting = processors.OFF;
+    private processors processorSetting = processors.OFF; // default to no processing as not to slow down imps
 
 
     @Override

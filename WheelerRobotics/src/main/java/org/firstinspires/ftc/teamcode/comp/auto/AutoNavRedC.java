@@ -13,8 +13,6 @@ import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 public class AutoNavRedC extends LinearOpMode {
     // for non next to caurousel
 
-    private BotVision bv = new BotVision();
-
     Meccanum meccanum = new Meccanum();
     int FOOT = 333;
     double SIDEWAYST = 2 / sqrt(2);
@@ -22,7 +20,6 @@ public class AutoNavRedC extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         meccanum.init(hardwareMap);
-        bv.init(hardwareMap);
         waitForStart();
         while (opModeIsActive()) {
             executeAutomaticSequence1();
@@ -32,14 +29,6 @@ public class AutoNavRedC extends LinearOpMode {
     private void executeAutomaticSequence1() {
         // should get 22
         // auto for near carousel
-
-        // top -> 1500, 300
-        // middle -> 500, 50 (prob) TEST
-        // bottom -> 100, 50 (prob) TEST
-
-        int MARKER_ARM = 1500;
-        int MARKER_AFTERARM = 300;
-
 
         meccanum.closeServoFull();
         // ()
@@ -53,13 +42,13 @@ public class AutoNavRedC extends LinearOpMode {
         // /\
         meccanum.turnDeg(65, meccanum.SPIN_MOTORS_SPEED, telemetry);
         // ~>
-        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, MARKER_ARM);
+        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1500);
         // |\
         meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 300);
         // /\
         meccanum.openServoFull();
         delay(1000);
-        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, MARKER_AFTERARM);
+        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 300);
         // (_
         meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
         // \/

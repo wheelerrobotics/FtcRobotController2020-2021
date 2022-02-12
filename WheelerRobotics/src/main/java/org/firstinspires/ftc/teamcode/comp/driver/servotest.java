@@ -57,7 +57,7 @@ import java.io.File;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Daniel's Wonderful Coding Adventure", group="CC")
+@TeleOp(name="Daniel's Wonderful Coding Adventure")
 public class servotest extends LinearOpMode {
 
     // Declare OpMode members.
@@ -84,7 +84,6 @@ public class servotest extends LinearOpMode {
         meccanum.init(hardwareMap);
 
         cm.init(meccanum, gamepad1, gamepad2);
-        //cms.init(meccanum, gamepad1);
 
         controlModes mode = controlModes.MULTI;
 
@@ -99,18 +98,10 @@ public class servotest extends LinearOpMode {
         while (opModeIsActive()) {
 
             Orientation angles = meccanum.getAngles();
-            telemetry.addData("angle", meccanum.getServo());
-            telemetry.addData("gp2l", gamepad2.left_trigger);
-            telemetry.addData("gp2r", gamepad2.right_trigger);
-            telemetry.addData("gp1l", gamepad1.left_trigger);
-            telemetry.addData("gp1r", gamepad1.right_trigger);
 
             cm.checkControls();
             cm.checkControls2();
 
-            //telemetry.addData("test", "test!");
-            //telemetry.addData("servo ", meccanum.getServo().getPosition());
-            //telemetry.addData("rotation ", angles.axesReference);
             if (gamepad1.dpad_down){
                 startupID = hardwareMap.appContext.getResources().getIdentifier("scree", "raw", hardwareMap.appContext.getPackageName());
                 appContext = hardwareMap.appContext;
@@ -125,15 +116,6 @@ public class servotest extends LinearOpMode {
                 telemetry.addData("play", "car");
 
             }
-            // MECCANUM MATH
-
-             // drives bottom steering motors
-
-
-
-
-
-
             telemetry.update();
         }
 

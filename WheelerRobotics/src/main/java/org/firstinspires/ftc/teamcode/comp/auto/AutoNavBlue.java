@@ -54,8 +54,6 @@ public class AutoNavBlue extends LinearOpMode {
 
         delay(2000);
 
-
-        //meccanum.motorDriveRelativeFieldAngleEncoded(90, meccanum.NORMAL_SPEED, 700);
     }
 
     public void delay(double time) {
@@ -65,28 +63,7 @@ public class AutoNavBlue extends LinearOpMode {
             delay(time - 100);
         } else return;
     }
-    /*public void parseMove(JSONObject move) throws JSONException {
-        switch (move.get("type")){
-            case "LINE":
-                // do stuff
-                if(move.get("relative").equals(1)){
-                    //meccanum.motorDriveLineRobotAngle();
-                }else{
-                    //meccanum.motorDriveLineFieldAngle();
-                }
-            case "TURN":
 
-            case "SPINNER":
-
-            case "CLAW":
-
-            case "ARM":
-
-            default:
-                throw new IllegalStateException("Unexpected value: " + move.get("type"));
-        }
-
-    }*/
 
 
 }
