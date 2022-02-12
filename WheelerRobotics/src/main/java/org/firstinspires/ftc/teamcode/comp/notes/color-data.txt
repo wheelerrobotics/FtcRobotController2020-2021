@@ -1,0 +1,17 @@
+// cone hsl: max(250, 36.3%, 44.3%) min(266, 47.4%, 26.1%)
+// cone hsl: target (249, 51.6%, 60.3%)
+// cone hsl: thresh (1, 15.3, 16)
+
+// felt cone hsl: min(267, 32.5%, 47.1%) max(248, 66.9%, 76.3%)
+// felt cone hsl: target (266, 36.6%, 39.95%)
+// felt cone hsl: thresh (2, 10.5, 5.95)
+
+
+maxes hashmap format
+    1:
+        "x": 20
+        "y": 10
+        "color"?
+    2:
+        "x": 20
+        "y": 10

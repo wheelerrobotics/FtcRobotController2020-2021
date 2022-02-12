@@ -7,3 +7,5 @@ powered by
  distance sensors to get location
  gyro to get location
  a model based on json moves which are interpreted
+
+THIS WOULD BE COOL BUT ALSO NOT GONNA HAPPEN SOON

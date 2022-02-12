@@ -1,80 +1,97 @@
 package org.firstinspires.ftc.teamcode.comp.auto;
 
-import static com.sun.tools.doclint.Entity.and;
-import static com.sun.tools.doclint.Entity.ge;
-import static com.sun.tools.doclint.Entity.pi;
-import static com.sun.tools.doclint.Entity.tau;
 import static java.lang.Math.floor;
-import static java.lang.Math.round;
+import static java.lang.Math.sqrt;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.sun.tools.javac.comp.Todo;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
+import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 
-@Autonomous
+@Autonomous( name = "Caurousel Red Nav")
 public class AutoNavRedC extends LinearOpMode {
     // for non next to caurousel
+
+    private BotVision bv = new BotVision();
+
     Meccanum meccanum = new Meccanum();
+    int FOOT = 333;
+    double SIDEWAYST = 2 / sqrt(2);
 
     @Override
     public void runOpMode() throws InterruptedException {
         meccanum.init(hardwareMap);
+        bv.init(hardwareMap);
         waitForStart();
-        while(opModeIsActive()){
+        while (opModeIsActive()) {
             executeAutomaticSequence1();
         }
     }
-    private void executeAutomaticSequence1(){
+
+    private void executeAutomaticSequence1() {
         // should get 22
-
-
         // auto for near carousel
-        // gotta replace 0 with tested vals
+
+        // top -> 1500, 300
+        // middle -> 500, 50 (prob) TEST
+        // bottom -> 100, 50 (prob) TEST
+
+        int MARKER_ARM = 1500;
+        int MARKER_AFTERARM = 300;
+
+
         meccanum.closeServoFull();
         // ()
-        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 10);
+        delay(1000);
+        meccanum.motorDriveEncodedReg(-meccanum.NORMAL_SPEED,
+                -meccanum.NORMAL_SPEED,
+                -meccanum.NORMAL_SPEED,
+                -meccanum.NORMAL_SPEED,
+                775,
+                telemetry);
         // /\
-        meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, 0);
-        // ->
-        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 10);
-        // /\
-        meccanum.motorSpinRightEncoded(meccanum.NORMAL_SPEED, 0);
-        // <~
-        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1);
-        // |\ /\
-        meccanum.openServoFull();
-        // (_
-        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, -1);
-        // |\ \/
-        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 1);
-        // \/
-        meccanum.motorSpinLeftEncoded(meccanum.NORMAL_SPEED, 0);
+        meccanum.turnDeg(65, meccanum.SPIN_MOTORS_SPEED, telemetry);
         // ~>
-        meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, 1);
-        // ->
-        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 1);
-        // \/
-        meccanum.spinnySpinEncoded(meccanum.OPTIMAL_SPINNER_POWER, 0);
-        // *
-        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 100);
+        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, MARKER_ARM);
+        // |\
+        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 300);
         // /\
+        meccanum.openServoFull();
+        delay(1000);
+        meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, MARKER_AFTERARM);
+        // (_
+        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
+        // \/
+        meccanum.turnDeg(25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
+        // <~
+        delay(100);
+        //meccanum.motorDriveEncoded(meccanum.NORMAL_SPEED,200);
+        // <-
+        meccanum.motorDriveBackEncoded(0.5, 2 * FOOT + 140);
+        // /\
+        meccanum.delay(2000);
+        //
+        // here you are facing the warehouse
+        meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, (int) floor(2 * FOOT * SIDEWAYST + 110));
+        // ->
+        meccanum.spinnySpinTime(meccanum.OPTIMAL_SPINNER_POWER, 2000);
+        // *
+        // /\
+        meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED, (int) floor(2 * FOOT * SIDEWAYST + 40));
+        delay(1000);
+        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, (int) floor(100));
+        // ->
 
     }
 
+    public void delay(double time) {
+        if (time <= 100) meccanum.delay(time);
+        else if (opModeIsActive()) {
+            meccanum.delay(100);
+            delay(time - 100);
+        } else return;
+    }
 
 
 }

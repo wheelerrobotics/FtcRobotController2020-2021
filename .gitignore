@@ -76,6 +76,9 @@ fastlane/screenshots
 fastlane/test_output
 fastlane/readme.md
 
+# eocv not included
+eovc/
+
 # Version control
 vcs.xml
 
@@ -86,3 +89,4 @@ lint/outputs/
 lint/tmp/
 # lint/reports/
 /WheelerRobotics/src/main/java/org/firstinspires/ftc/teamcode/old/lib/
+/WheelerRobotics/src/main/java/org/firstinspires/ftc/teamcode/comp/eovc/

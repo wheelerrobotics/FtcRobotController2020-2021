@@ -1,20 +1,15 @@
-package org.firstinspires.ftc.teamcode.comp.vision;
+package org.firstinspires.ftc.teamcode.comp.test.vision;
 
 import static java.lang.Math.abs;
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
 
-import androidx.annotation.NonNull;
 import androidx.core.graphics.ColorUtils;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.sun.tools.javac.util.List;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.internal.android.dx.rop.cst.CstArray;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -24,10 +19,8 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
-import org.tensorflow.lite.support.image.ImageProcessor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 
 @TeleOp

@@ -15,6 +15,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
 
+// a "simple" class for mapping 1p controller settings
+
 public class ControllerMapSINGLE {
 
     private Meccanum meccanum;

@@ -1,16 +1,16 @@
-package org.firstinspires.ftc.teamcode.comp.test;
+package org.firstinspires.ftc.teamcode.comp.test.vision;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcontroller.external.samples.SensorREV2mDistance;
 
+@Disabled
 public class FieldPosTest extends LinearOpMode {
-
-
     @Override
     public void runOpMode() throws InterruptedException {
 

@@ -8,9 +8,10 @@ public class supaAuto extends LinearOpMode {
     private BotVision bv = new BotVision();
     @Override
     public void runOpMode() throws InterruptedException {
+        // simple class for viewing camera feed and testing processors
         waitForStart();
         bv.init(hardwareMap);
-        while(opModeIsActive()){
-        }
+        bv.pipeline.setProcessorSetting(ColorIsolationPipeline.processors.SIMPLE);
+        while (opModeIsActive()){}
     }
 }

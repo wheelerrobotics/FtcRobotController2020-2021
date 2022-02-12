@@ -21,44 +21,91 @@ class ColorIsolationPipeline extends OpenCvPipeline
 {
     int quality = 5;
     private HashMap<Integer, HashMap<String, Integer>> maxes;
+    private ArrayList<ArrayList<Integer>> detect;
 
-    private FtcDashboard dash = FtcDashboard.getInstance();
-    private Telemetry tele = dash.getTelemetry();
+    int left = 0;
+    int right = 0;
+    int cmax = 0;
+
+    private final FtcDashboard dash = FtcDashboard.getInstance();
+    private final Telemetry tele = dash.getTelemetry();
+
+    // 1, 2, 3 from left to right relative to robot
+    private int conePosition = 0;
+
+    public enum processors { OFF, SIMPLE, COMPLEX }
+    private processors processorSetting = processors.OFF;
 
 
     @Override
-    public Mat processFrame(Mat input)
-    {
-        // this function goes through all pixels in the specified color range
-        // for each it increases its neighbors probability if they are in the color range
-            /*
+    public Mat processFrame(Mat input) {
+        if(processorSetting == processors.COMPLEX){
+            // will be to locate blocks
+            detect = new ArrayList<ArrayList<Integer>>();
+            cmax = 0;
+            maxes = new HashMap<Integer, HashMap<String, Integer>>();
+        } else if(processorSetting == processors.SIMPLE){
+            // to get data of cone
+            detect = new ArrayList<ArrayList<Integer>>();
+            left = 0;
+            right = 0;
+            colorIsolator(input); // return detects and add to r/l
+            updateConePos();
+        } else if (processorSetting == processors.OFF){
+            // do something when not processing? idk
+        }
 
-            This is the way it adds to probability
-            x: the current target pixel
+        FtcDashboard.getInstance().getTelemetry().update();
+        return input;
+    }
+    public void updateConePos(){
+        // update cone position by getting if left/right regions have more detected pixels
+        FtcDashboard.getInstance().getTelemetry().addData("right", right);
+        FtcDashboard.getInstance().getTelemetry().addData("left", left);
 
-            |0|0|1|0|0|
-            |0|2|3|2|0|
-            |1|3|x|3|1|
-            |0|2|3|2|0|
-            |0|0|1|0|0|
+        if (right > 5 && left < right) {
+            FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 2");
+            conePosition = 2;
+        } else if (left > 5 && left > right) {
+            FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 1");
+            conePosition = 1;
+        } else {
+            FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 3");
+            conePosition = 3;
+        }
+    }
+    public HashMap<Integer, HashMap<String, Integer>> getDetections(){
+        // get specific detection positions, maybe maxer it later?
 
-            It then goes through each logging the highest scored pixel
-            These pixels are then isolated and the same process is performed until there are however many masses detected
-            */
-
-        // 165 154 235
-        // 85 72 154
-        // 165 154 235
-        // 85 72 154
-
-        // cone hsl: max(250, 36.3%, 44.3%) min(266, 47.4%, 26.1%)
-        // cone hsl: target (249, 51.6%, 60.3%)
-        // cone hsl: thresh (1, 15.3, 16)
-
-        // felt cone hsl: min(267, 32.5%, 47.1%) max(248, 66.9%, 76.3%)
-        // felt cone hsl: target (266, 36.6%, 39.95%)
-        // felt cone hsl: thresh (2, 10.5, 5.95)
-
+        tele.addData("maxes", maxes.toString());
+        return maxes;
+    }
+    public void fromGreatestMax(int cmax){
+        // create list of points from values of greatest max
+        for(int i = 0; i<detect.size(); i++){
+            for(int e = 0; e<detect.get(i).size(); e++){
+                if(detect.get(i).get(e) >= cmax){
+                    HashMap<String, Integer> newPoint = new HashMap<String, Integer>();
+                    newPoint.put("x", e);
+                    newPoint.put("y", i);
+                    maxes.put(maxes.size(), newPoint);
+                    FtcDashboard.getInstance().getTelemetry().addData("mac", cmax);
+                }
+            }
+        }
+    }
+    public void greatestMax(){
+        // get greatest max
+        for(int i = 0; i<detect.size(); i++) {
+            for (int e = 0; e < detect.get(i).size(); e++) {
+                if(detect.get(i).get(e) > cmax){
+                    cmax = detect.get(i).get(e);
+                }
+            }
+        }
+    }
+    public void colorIsolator(Mat input){
+        // isolate color range
         float htar = 266F;
         float star = 0.37F;
         float ltar = 0.4F;
@@ -69,12 +116,7 @@ class ColorIsolationPipeline extends OpenCvPipeline
 
 
         float[] hsl = {0, 0, 0};
-        ArrayList<ArrayList<Integer>> detect = new ArrayList<ArrayList<Integer>>();
 
-        int left = 0;
-        int right = 0;
-
-        // isolate color range
         for(int i = 0; i<input.rows(); i+=quality){
             ArrayList<Integer> nowList = new ArrayList<Integer>();
             for(int e = 0; e<input.cols(); e+=quality){
@@ -94,8 +136,28 @@ class ColorIsolationPipeline extends OpenCvPipeline
             detect.add(nowList);
         }
 
+    }
+    public void blurer(Mat input) {
+
+        // this function goes through all pixels in the specified color range
+        // for each it increases its neighbors probability if they are in the color range
+            /*
+
+            This is the way it adds to probability
+            x: the current target pixel
+
+            |0|0|1|0|0|
+            |0|2|3|2|0|
+            |1|3|x|3|1|
+            |0|2|3|2|0|
+            |0|0|1|0|0|
+
+            It then goes through each logging the highest scored pixel
+            These pixels are then isolated and the same process is performed until there are however many masses detected
+           */
+
         // "blur", assign probability to each pixel
-        /*for(int i = 0; i<input.rows()/quality; i++){
+        for(int i = 0; i<input.rows()/quality; i++){
             for(int e = 0; e<input.cols()/quality; e++){
                 if(detect.get(i).get(e) > 0){
                     // close neighbors + 2
@@ -118,68 +180,11 @@ class ColorIsolationPipeline extends OpenCvPipeline
 
                 }
             }
-        }*/
-        /*
-        int cmax = 0;
-        maxes = new HashMap<Integer, HashMap<String, Integer>>();
-        */
-
-        /*
-            1:
-                "x": 20
-                "y": 10
-            2:
-                "x": 20
-                "y": 10
-         */
-        // get greatest max
-        /*for(int i = 0; i<detect.size(); i++) {
-            for (int e = 0; e < detect.get(i).size(); e++) {
-                if(detect.get(i).get(e) > cmax){
-                    cmax = detect.get(i).get(e);
-                }
-            }
         }
-
-        // create list of points from values of greatest max
-        for(int i = 0; i<detect.size(); i++){
-            for(int e = 0; e<detect.get(i).size(); e++){
-                if(detect.get(i).get(e) >= cmax){
-                    HashMap<String, Integer> newPoint = new HashMap<String, Integer>();
-                    newPoint.put("x", e);
-                    newPoint.put("y", i);
-                    maxes.put(maxes.size(), newPoint);
-                    FtcDashboard.getInstance().getTelemetry().addData("mac", cmax);
-                }
-            }
-        }*/
-
-        FtcDashboard.getInstance().getTelemetry().addData("right", right);
-        FtcDashboard.getInstance().getTelemetry().addData("left", left);
-
-        if (right > 5 && left < right) FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 2");
-        else if (left > 5 && left > right) FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 1");
-        else FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 3");
-
-        FtcDashboard.getInstance().getTelemetry().update();
-
-        //maxes = maxer(maxes, 2);
-        // draw where the things are
-        //for(HashMap<String, Integer> point : maxes.values()){ }
-
-        return input;
     }
-
-
-    public HashMap<Integer, HashMap<String, Integer>> getDetections(){
-        tele.addData("maxes", maxes.toString());
-        return maxes;
-    }
-
-
-    // maxer algo translated from python
-    // get pixels around positives and eliminate them if another is found withing distance to it
     public HashMap<Integer, HashMap<String, Integer>> maxer(HashMap<Integer, HashMap<String, Integer>> selectedMaxes, int distance){
+        // maxer algo translated from python
+        // get pixels around positives and eliminate them if another is found withing distance to it
         ArrayList<Integer> remover = new ArrayList<Integer>();
         for (HashMap<String, Integer> targetMax : selectedMaxes.values()){
             for (int i = 0; i<selectedMaxes.size(); i++) {
@@ -202,31 +207,15 @@ class ColorIsolationPipeline extends OpenCvPipeline
 
 
     }
+    public int getConePosition() {
+        return conePosition;
+    }
+    public void setProcessorSetting(processors setting){
+        processorSetting = setting;
+    }
 
     @Override
     public void onViewportTapped() {
         tele.addData("maxes", maxes.toString());
-        /*
-         * The viewport (if one was specified in the constructor) can also be dynamically "paused"
-         * and "resumed". The primary use case of this is to reduce CPU, memory, and power load
-         * when you need your vision pipeline running, but do not require a live preview on the
-         * robot controller screen. For instance, this could be useful if you wish to see the live
-         * camera preview as you are initializing your robot, but you no longer require the live
-         * preview after you have finished your initialization process; pausing the viewport does
-         * not stop running your pipeline.
-         *
-         * Here we demonstrate dynamically pausing/resuming the viewport when the user taps it
-         */
-
-            /* viewportPaused = !viewportPaused;
-
-            if(viewportPaused)
-            {
-                webcam.pauseViewport();
-            }
-            else
-            {
-                webcam.resumeViewport();
-            }*/
     }
 }

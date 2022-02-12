@@ -26,11 +26,11 @@
     "angle": 90,
     "relative": true,
     "right": false
-},
+  },
   "5": {
-  "type": "NOISE",
-  "file": "path/to/file"
-},
+    "type": "NOISE",
+    "file": "path/to/file"
+  },
   "6": {
     "type": "WAIT",
     "time": 1000

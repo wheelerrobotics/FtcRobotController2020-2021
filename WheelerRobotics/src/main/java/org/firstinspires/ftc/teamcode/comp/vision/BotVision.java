@@ -20,36 +20,15 @@ package org.firstinspires.ftc.teamcode.comp.vision;
  * SOFTWARE.
  */
 
-import static java.lang.Math.abs;
-import static java.lang.Math.floor;
-import static java.lang.Math.pow;
-
-import android.graphics.Color;
-
-import androidx.core.graphics.ColorUtils;
-
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.sun.tools.javac.util.List;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.internal.android.dx.rop.cst.CstArray;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
-import org.tensorflow.lite.support.image.ImageProcessor;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 public class BotVision {
     OpenCvWebcam webcam;
@@ -83,8 +62,12 @@ public class BotVision {
                 tele.update();
             }
         });
-
-
+    }
+    public void turnOnImgProc(){
+        pipeline.setProcessorSetting(ColorIsolationPipeline.processors.OFF);
+    }
+    public int getConePosition(){
+        return pipeline.getConePosition();
     }
 
 

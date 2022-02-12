@@ -1,23 +1,16 @@
 package org.firstinspires.ftc.teamcode.comp.controller;
 
-import static java.lang.Double.max;
-
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
-
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
+
+// a "simple" class for mapping 2p controller settings
 
 public class ControllerMap {
 
     private Meccanum meccanum;
     private Gamepad gamepad1;
     private Gamepad gamepad2;
-
-    private boolean gp2ldown;
-    private boolean gp2lup;
 
     public void init(Meccanum mec, Gamepad gp1, Gamepad gp2){
         meccanum = mec;
