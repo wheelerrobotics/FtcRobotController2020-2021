@@ -21,6 +21,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcontroller.external.samples.SensorREV2mDistance;
@@ -30,126 +31,21 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
+import java.util.HashMap;
+
 import javax.lang.model.type.NoType;
 
 // robot driving and motion class
 
-public class Meccanum {
+public class Meccanum extends BaseMeccanum {
 
-    private final ElapsedTime runtime = new ElapsedTime(); // getting a warning to make it final
-
-    private Servo servo0;
-    private DcMotor arm;
-
-    public double rx;
-
-
-    public final String SINGLEPLAYER_CONTROL = "SINGLEPLAYER";
-    public final String MULTIPLAYER_CONTROL = "MULTIPLAYER";
-
-    // static variables
-    public final double NORMAL_SPEED = 0.2;
-    public final double SERVO_FULLY_CLOSED = 0.0;
-    public final double SERVO_FULLY_OPENED = 0.5;
-    public final double HALF_SERVO_ANGLE = 0.5;
-    public final double BACK_SERVO_ANGLE = Math.PI;
-    public final double ARM_MAX_SPEED = -   0.5;
-    public final double HIGH_SPINNER_POWER = 1;
-    public final double OPTIMAL_SPINNER_POWER = 0.5;
-    public final double MOTOR_STOP = 0;
-    public final double SPIN_MOTORS_SPEED = 0.3;
-
-    public boolean opModeActive = false;
-
-    private DcMotor spinner;
-
-    private BNO055IMU imu;
-
-    private DcMotor motorFrontRight;
-    private DcMotor motorBackRight;
-    private DcMotor motorFrontLeft;
-    private DcMotor motorBackLeft;
-
-    private Orientation angles;
-
-    public HardwareMap hw;
-
-    private float INITIAL_ANGLE;
-
-    public FtcDashboard dash = FtcDashboard.getInstance();
-
-    private SensorREV2mDistance distanceBack;
-    private SensorREV2mDistance distanceRight;
-    private SensorREV2mDistance distanceLeft;
-
-
-    private int startupID;
-    private Context appContext;
-
-
-    public void init(@NonNull HardwareMap hardwareMap){
-        // init the class, declare all the sensors and motors and stuff
-        // should be called before using class ALWAYS
-
-        // internal IMU setup (copied and pasted, idk what it really does, but it works)
-        opModeActive = true;
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled      = true;
-        parameters.loggingTag          = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
-        angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
-
-        INITIAL_ANGLE = getAngles().firstAngle;
-
-        //distace sensors (unused for now)
-        /*
-        distanceBack = hw.get(SensorREV2mDistance.class, "distanceBack");
-        distanceRight = hw.get(SensorREV2mDistance.class, "distanceRight");
-        distanceLeft = hw.get(SensorREV2mDistance.class, "distanceLeft");
-        */
-
-        // Meccanum Motors Definition and setting prefs
-
-        motorFrontLeft = hardwareMap.dcMotor.get("motorFrontLeft");
-        motorBackLeft = hardwareMap.dcMotor.get("motorBackLeft");
-        motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
-        motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
-
-        // Reverse the left side motors and set behaviors to stop instead of coast
-        motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        //define arm and servo objects and also spinner
-        servo0 = hardwareMap.get(Servo.class, "servo-0");
-        arm = hardwareMap.get(DcMotor.class, "arm");
-        spinner = hardwareMap.get(DcMotor.class, "spinner");
-
-        //set prefs for arm and servo
-        servo0.setDirection(Servo.Direction.FORWARD);
-        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        // define hw as the hardware map for possible access later in this class
-        hw = hardwareMap;
-
-        runtime.reset();
-    }
 
     // INDEV METHODS
     public void regulateArm(double scale){
         // METHOD IN DEVELOPMENT
         // eliminates the problem of the arm falling when not moving up
         // useful everywhere if done right
+
         arm.setTargetPosition(arm.getCurrentPosition());
     }
     public void motorDriveRelativeAngleEncoded(double radians, double speed, double ticks){
@@ -459,7 +355,7 @@ public class Meccanum {
     public void turnDeg(double degrees, double speed, Telemetry telemetry) {
             // self correcting method to turn to an angle relative to current angle
             // used in auto (SUPER COOL)
-            double threshold = .1;
+            double threshold = 0.1;
             double PROP_CONST = 0.02;
             double startDegrees = getAngles().firstAngle;
             while(Math.abs(getAngles().firstAngle - AngleUnit.normalizeDegrees(startDegrees + degrees)) > threshold){ // start degrees + degrees is the actual target postition
@@ -481,6 +377,80 @@ public class Meccanum {
             motorStop();
 
         }
+
+    public void turnDegPID(double degrees, Telemetry telemetry) {
+        // self correcting method to turn to an angle relative to current angle
+        // used in auto (SUPER COOL)
+        double kd = 0.6;
+        double kp = 0.2;
+        double threshold = 0.1;
+        double PROP_CONST = 0.02;
+        double startPos = spinner.getCurrentPosition();
+        ElapsedTime time = new ElapsedTime();
+        time.reset();
+        double integration = 0.0;
+        double derivative = 0.0;
+        double proportion = 0.0;
+
+        HashMap<Integer, Double> et = new HashMap<Integer, Double>(); // error: rt-yt
+        HashMap<Integer, Double> yt = new HashMap<Integer, Double>(); // measured output
+        HashMap<Integer, Double> rt = new HashMap<Integer, Double>(); // setpoint/target NOTE: this will not change, but using a hashmap instead of static var makes it future proof
+        HashMap<Integer, Double> dt = new HashMap<Integer, Double>(); // change in time over previous interval in millis
+
+        ElapsedTime changeTime = new ElapsedTime();
+
+        double crt = 0.0;
+        double cyt = 0.0;
+        double cet = 0.0;
+
+        while(true){ // start degrees + degrees is the actual target postition
+
+            changeTime.reset();
+
+            double writeVal = 0;
+            //current vals
+            crt = startPos + degrees;
+            cyt = startPos - spinner.getCurrentPosition();
+            cet = cyt - crt;
+
+
+            telemetry.addData("siz", dt.size());
+            telemetry.update();
+
+            int ct = dt.size();
+            rt.put(rt.size(), crt);
+            yt.put(yt.size(), cyt);
+            et.put(et.size(), cet);
+            dt.put(dt.size(), changeTime.milliseconds());
+
+
+
+            //HashMap<Integer, Double> ut = new HashMap<>(); // input
+            // maybe change from traditional pid to a pid with an integral that only reacts to change if there is notable difference between yt and rt
+            //integration += et.get(ct) * dt.get(ct); // integrates over time
+            if(et.containsKey(ct-1)) derivative = ( cet - et.get(ct-1) ) / dt.get(ct); // slope between now and last time step
+            else derivative = 0;
+            proportion = cet; // const
+
+            writeVal = proportion * kp + derivative * kd;
+
+            spinnySpin(writeVal);
+
+            telemetry.addData("derivative", derivative);
+            telemetry.addData("proportion", proportion);
+
+            telemetry.addData("yt", cyt);
+            telemetry.addData("rt", crt);
+            telemetry.addData("et", cet);
+
+            telemetry.update();
+
+
+
+        }
+        //motorStop();
+
+    }
         // misc
     public void delay(double time){
         // used to stall program

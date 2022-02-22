@@ -41,10 +41,10 @@ public class ControllerMap {
     private void dpadRight2(){}
     private void dpadUp2(){}
     private void dpadDown2() { meccanum.setServo(meccanum.BACK_SERVO_ANGLE); }
-    private void leftBumper2(){  }
+    private void leftBumper2(){ meccanum.spinnySpin(-meccanum.OPTIMAL_SPINNER_POWER); }
     private void rightBumper2(){ meccanum.spinnySpin(meccanum.OPTIMAL_SPINNER_POWER); }
     private void buttonY2(){}
-    private void leftTrigger2(){}
+    private void leftTrigger2(){ meccanum.spinnySpin(-meccanum.HIGH_SPINNER_POWER); }
     private void rightTrigger2(){ meccanum.spinnySpin(meccanum.HIGH_SPINNER_POWER); }
     private void buttonX2(){}
     private void buttonB2(){ meccanum.closeServoFull(); }
@@ -74,7 +74,7 @@ public class ControllerMap {
     }
     public void checkControls2(){
         if (gamepad2.left_trigger > 0.01) joystickDriver2(0.3); //
-        else joystickDriver2(0.8); //
+        else joystickDriver2(0.8); //A
 
 
         if(gamepad2.left_bumper) leftBumper2(); //
@@ -88,7 +88,11 @@ public class ControllerMap {
 
         if (gamepad2.right_trigger > 0.01) rightTrigger2(); //
         else if (gamepad2.right_bumper) rightBumper2(); //
+        else if (gamepad2.left_trigger > 0.01) leftTrigger2(); //
+        else if (gamepad2.left_bumper) leftBumper2(); //
         else meccanum.spinnyStop(); //
+
+
 
     }
 

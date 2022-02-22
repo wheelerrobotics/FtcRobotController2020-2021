@@ -40,7 +40,7 @@ public class AutoNavRedC extends LinearOpMode {
                 775,
                 telemetry);
         // /\
-        meccanum.turnDeg(65, meccanum.SPIN_MOTORS_SPEED, telemetry);
+        meccanum.turnDeg(-65, meccanum.SPIN_MOTORS_SPEED, telemetry);
         // ~>
         meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 1500);
         // |\
@@ -52,7 +52,7 @@ public class AutoNavRedC extends LinearOpMode {
         // (_
         meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
         // \/
-        meccanum.turnDeg(25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
+        meccanum.turnDeg(-25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
         // <~
         delay(100);
         //meccanum.motorDriveEncoded(meccanum.NORMAL_SPEED,200);
@@ -62,15 +62,16 @@ public class AutoNavRedC extends LinearOpMode {
         meccanum.delay(2000);
         //
         // here you are facing the warehouse
-        meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, (int) floor(2 * FOOT * SIDEWAYST + 110));
+        meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED, (int) floor(2 * FOOT * SIDEWAYST + 110));
         // ->
-        meccanum.spinnySpinTime(meccanum.OPTIMAL_SPINNER_POWER, 2000);
+        meccanum.spinnySpinTime(-meccanum.OPTIMAL_SPINNER_POWER, 2000);
         // *
         // /\
-        meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED, (int) floor(2 * FOOT * SIDEWAYST + 40));
+        meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, (int) floor(2 * FOOT * SIDEWAYST + 40));
         delay(1000);
         meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, (int) floor(100));
         // ->
+
 
     }
 

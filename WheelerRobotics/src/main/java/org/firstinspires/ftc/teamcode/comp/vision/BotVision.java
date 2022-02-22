@@ -63,6 +63,10 @@ public class BotVision {
             }
         });
     }
+    public void setParams(float htar, float star, float ltar, float hthresh, float sthresh, float lthresh) {
+        pipeline.setParams(htar, star, ltar, hthresh, sthresh, lthresh);
+    }
+
     public int getConePosition(){
         pipeline.setProcessorSetting(ColorIsolationPipeline.processors.SIMPLE);
         int pos = pipeline.getConePosition();

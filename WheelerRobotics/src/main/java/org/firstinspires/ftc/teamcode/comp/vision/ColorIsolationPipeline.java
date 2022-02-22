@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.comp.vision;
 
+import static org.checkerframework.checker.units.UnitsTools.min;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 
@@ -33,9 +34,24 @@ class ColorIsolationPipeline extends OpenCvPipeline
     // 1, 2, 3 from left to right relative to robot
     private int conePosition = 0;
 
-    public enum processors { OFF, SIMPLE, COMPLEX }
-    private processors processorSetting = processors.OFF; // default to no processing as not to slow down imps
+    public enum processors { OFF, SIMPLE, COMPLEX, SIMPLER }
+    private processors processorSetting = processors.SIMPLE; // default to no processing as not to slow down imps
 
+    private float Lhtar = 0F;
+    private float Lstar = 0F;
+    private float Lltar = 0F;
+    private float Lhthresh = 0F;
+    private float Lsthresh = 0F;
+    private float Llthresh = 0F;
+
+    public void setParams(float htar, float star, float ltar, float hthresh, float sthresh, float lthresh){
+        Lhtar = htar;
+        Lstar = star;
+        Lltar = ltar;
+        Lhthresh = hthresh;
+        Lsthresh = sthresh;
+        Llthresh = lthresh;
+    }
 
     @Override
     public Mat processFrame(Mat input) {
@@ -44,12 +60,19 @@ class ColorIsolationPipeline extends OpenCvPipeline
             detect = new ArrayList<ArrayList<Integer>>();
             cmax = 0;
             maxes = new HashMap<Integer, HashMap<String, Integer>>();
-        } else if(processorSetting == processors.SIMPLE){
+        } else if(processorSetting == processors.SIMPLER){
             // to get data of cone
             detect = new ArrayList<ArrayList<Integer>>();
             left = 0;
             right = 0;
             colorIsolator(input); // return detects and add to r/l
+            updateConePos();
+        } else if(processorSetting == processors.SIMPLE) {
+            // to get data of cone
+            detect = new ArrayList<ArrayList<Integer>>();
+            left = 0;
+            right = 0;
+            coolColorIsolator(input); // return detects and add to r/l
             updateConePos();
         } else if (processorSetting == processors.OFF){
             // do something when not processing? idk
@@ -107,12 +130,12 @@ class ColorIsolationPipeline extends OpenCvPipeline
     public void colorIsolator(Mat input){
         // isolate color range
         float htar = 266F;
-        float star = 0.37F;
-        float ltar = 0.4F;
+        float star = 0.5F;
+        float ltar = 0.5F;
 
-        float hthresh = 4F;
-        float sthresh = 0.11F;
-        float lthresh = 0.6F;
+        float hthresh = 3F;
+        float sthresh = 0.5F;
+        float lthresh = 0.5F;
 
 
         float[] hsl = {0, 0, 0};
@@ -121,9 +144,34 @@ class ColorIsolationPipeline extends OpenCvPipeline
             ArrayList<Integer> nowList = new ArrayList<Integer>();
             for(int e = 0; e<input.cols(); e+=quality){
                 ColorUtils.RGBToHSL((int) input.get(i, e)[0], (int) input.get(i, e)[1], (int) input.get(i, e)[2], hsl);
-                if (hsl[0] > htar-hthresh && hsl[0] < htar+hthresh &&
+
+                if ((hsl[0] > htar-hthresh && hsl[0] < htar+hthresh &&
                         hsl[1] > star-sthresh && hsl[1] < star+sthresh &&
-                        hsl[2] > ltar-lthresh && hsl[2] < ltar+lthresh) {
+                        hsl[2] > ltar-lthresh && hsl[2] < ltar+lthresh)) {
+                    nowList.add(1);
+                    if(e < input.cols()/2) left += 1;
+                    else right += 1;
+                    Imgproc.circle(input, new Point(e, i), 0, new Scalar(input.get(i, e)[0], 0, input.get(i, e)[2]), quality);
+                } else {
+                    Imgproc.circle(input, new Point(e, i), 0, new Scalar(input.get(i, e)[0]+10, input.get(i, e)[1]+10, input.get(i, e)[2]+10), quality);
+                    nowList.add(0);
+                }
+            }
+            detect.add(nowList);
+        }
+
+    }
+    public void coolColorIsolator(Mat input){
+
+        float[] hsl = {0, 0, 0};
+
+        for(int i = 0; i<input.rows(); i+=quality){
+            ArrayList<Integer> nowList = new ArrayList<Integer>();
+            for(int e = 0; e<input.cols(); e+=quality){
+                ColorUtils.RGBToHSL((int) input.get(i, e)[0], (int) input.get(i, e)[1], (int) input.get(i, e)[2], hsl);
+                if (hsl[0] > Lhtar-Lhthresh && hsl[0] < Lhtar+Lhthresh &&
+                        hsl[1] > Lstar-Lsthresh && hsl[1] < Lstar+Lsthresh &&
+                        hsl[2] > Lltar-Llthresh && hsl[2] < Lltar+Llthresh) {
                     nowList.add(1);
                     if(e < input.cols()/2) left += 1;
                     else right += 1;

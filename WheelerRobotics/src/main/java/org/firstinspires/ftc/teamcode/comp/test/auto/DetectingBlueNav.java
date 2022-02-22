@@ -8,11 +8,13 @@ package org.firstinspires.ftc.teamcode.comp.test.auto;
 
 // default to top level
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 
+@Autonomous
 public class DetectingBlueNav extends LinearOpMode {
     // for non next to caurousel
     Meccanum meccanum = new Meccanum();
@@ -30,26 +32,30 @@ public class DetectingBlueNav extends LinearOpMode {
     private void executeAutomaticSequence1() {
         // should get 26
         // auto for near carousel
-
+        int DRIVE_AFTERARM = 350;
         int MARKER_ARM = 1500; // how high the arm should go to place block
         int MARKER_AFTERARM = 300; // how much the arm should raise after as not to catch
         int pos = bv.getConePosition();
 
         if(pos == 1){
-            MARKER_ARM = 100;
-            MARKER_AFTERARM = 30;
+            MARKER_ARM = 306;
+            DRIVE_AFTERARM = 150;
+            MARKER_AFTERARM = 90;
         }else if(pos == 2){
-            MARKER_ARM = 500;
+            MARKER_ARM = 666;
+            DRIVE_AFTERARM = 250;
             MARKER_AFTERARM = 50;
         }else if(pos == 3){
             MARKER_ARM = 1500;
+            DRIVE_AFTERARM = 350;
             MARKER_AFTERARM = 300;
         }
 
         meccanum.closeServoFull();
         // ()
         delay(1000);
-        meccanum.motorDriveEncodedReg(-meccanum.NORMAL_SPEED,
+        meccanum.motorDriveEncodedReg(
+                -meccanum.NORMAL_SPEED,
                 -meccanum.NORMAL_SPEED,
                 -meccanum.NORMAL_SPEED,
                 -meccanum.NORMAL_SPEED,
@@ -60,7 +66,7 @@ public class DetectingBlueNav extends LinearOpMode {
         // ~>
         meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, MARKER_ARM);
         // |\
-        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 350);
+        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, DRIVE_AFTERARM);
         // /\
         meccanum.openServoFull();
         delay(1000);

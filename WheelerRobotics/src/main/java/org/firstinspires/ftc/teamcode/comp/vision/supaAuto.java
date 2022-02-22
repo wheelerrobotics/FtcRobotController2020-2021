@@ -12,6 +12,8 @@ public class supaAuto extends LinearOpMode {
         waitForStart();
         bv.init(hardwareMap);
         bv.pipeline.setProcessorSetting(ColorIsolationPipeline.processors.SIMPLE);
-        while (opModeIsActive()){}
+        while (opModeIsActive()){
+
+        }
     }
 }
