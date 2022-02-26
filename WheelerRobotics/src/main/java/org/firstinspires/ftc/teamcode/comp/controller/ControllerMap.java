@@ -46,7 +46,7 @@ public class ControllerMap {
     private void buttonY2(){}
     private void leftTrigger2(){ meccanum.spinnySpin(-meccanum.HIGH_SPINNER_POWER); }
     private void rightTrigger2(){ meccanum.spinnySpin(meccanum.HIGH_SPINNER_POWER); }
-    private void buttonX2(){}
+    private void buttonX2(){ meccanum.closeServoFull(); }
     private void buttonB2(){ meccanum.closeServoFull(); }
     private void buttonA2(){ meccanum.openServoFull(); }
     private void rumble2(int time){ gamepad2.rumble(time); }

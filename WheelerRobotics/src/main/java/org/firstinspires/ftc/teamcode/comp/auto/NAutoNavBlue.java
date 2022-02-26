@@ -6,8 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
 
-@Autonomous( name = "Warehouse Blue Nav")
-public class AutoNavBlue extends LinearOpMode {
+public class NAutoNavBlue extends LinearOpMode {
     // for non next to caurousel
     Meccanum meccanum = new Meccanum();
 

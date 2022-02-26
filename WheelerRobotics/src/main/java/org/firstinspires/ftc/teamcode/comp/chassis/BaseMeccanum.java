@@ -48,7 +48,7 @@ public class BaseMeccanum {
 
     protected final ElapsedTime runtime = new ElapsedTime(); // getting a warning to make it final
 
-    protected Servo servo0;
+    public Servo servo0;
     protected DcMotor arm;
 
     public double rx;

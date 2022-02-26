@@ -50,14 +50,14 @@ public class AutoNavRedC extends LinearOpMode {
         delay(1000);
         meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 300);
         // (_
-        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
+        meccanum.motorDriveBackwardEncoded(meccanum.NORMAL_SPEED, 30);
         // \/
         meccanum.turnDeg(-25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
         // <~
         delay(100);
         //meccanum.motorDriveEncoded(meccanum.NORMAL_SPEED,200);
         // <-
-        meccanum.motorDriveBackEncoded(0.5, 2 * FOOT + 140);
+        meccanum.motorDriveBackwardEncoded(0.5, 2 * FOOT + 140);
         // /\
         meccanum.delay(2000);
         //
@@ -69,7 +69,7 @@ public class AutoNavRedC extends LinearOpMode {
         // /\
         meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, (int) floor(2 * FOOT * SIDEWAYST + 40));
         delay(1000);
-        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, (int) floor(100));
+        meccanum.motorDriveBackwardEncoded(meccanum.NORMAL_SPEED, (int) floor(100));
         // ->
 
 

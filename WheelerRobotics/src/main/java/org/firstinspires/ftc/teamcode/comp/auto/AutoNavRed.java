@@ -12,7 +12,7 @@ public class AutoNavRed extends LinearOpMode {
     Meccanum meccanum = new Meccanum();
 
     public void runOpMode() {
-        meccanum.init(hardwareMap);
+        meccanum.init2(hardwareMap);
         waitForStart();
         executeAutomaticSequence1();
 
@@ -36,13 +36,13 @@ public class AutoNavRed extends LinearOpMode {
         delay(1000);
         meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, 400);
         // (_
-        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
+        meccanum.motorDriveBackwardEncoded(meccanum.NORMAL_SPEED, 30);
         // \/
         meccanum.turnDeg(25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
         // <~
         meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, 350);
         // <-
-        meccanum.motorDriveBackEncoded(1, 1400);
+        meccanum.motorDriveBackwardEncoded(1, 1400);
         // /\
         meccanum.turnDeg(180, meccanum.SPIN_MOTORS_SPEED, telemetry);
 
