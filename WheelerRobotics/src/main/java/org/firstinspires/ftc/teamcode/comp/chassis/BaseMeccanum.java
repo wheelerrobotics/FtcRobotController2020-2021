@@ -49,6 +49,7 @@ public class BaseMeccanum {
     protected final ElapsedTime runtime = new ElapsedTime(); // getting a warning to make it final
 
     public Servo servo0;
+    public Servo camServo;
     protected DcMotor arm;
 
     public double rx;
@@ -143,6 +144,7 @@ public class BaseMeccanum {
 
         //define arm and servo objects and also spinner
         servo0 = hardwareMap.get(Servo.class, "servo-0");
+        camServo = hardwareMap.get(Servo.class, "cameraServo");
         arm = hardwareMap.get(DcMotor.class, "arm");
         spinner = hardwareMap.get(DcMotor.class, "spinner");
         spinner.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

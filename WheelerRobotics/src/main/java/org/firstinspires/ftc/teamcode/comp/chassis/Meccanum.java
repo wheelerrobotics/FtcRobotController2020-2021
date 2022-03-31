@@ -206,63 +206,6 @@ public class Meccanum extends BaseMeccanum {
         delay(time);
         motorStop();
     }
-    public void init2(@NonNull HardwareMap hardwareMap){
-        // init the class, declare all the sensors and motors and stuff
-        // should be called before using class ALWAYS
-
-        // internal IMU setup (copied and pasted, idk what it really does, but it works)
-        opModeActive = true;
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled      = true;
-        parameters.loggingTag          = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
-        angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
-
-        INITIAL_ANGLE = getAngles().firstAngle;
-
-        //distace sensors (unused for now)
-        /*
-        distanceBack = hw.get(SensorREV2mDistance.class, "distanceBack");
-        distanceRight = hw.get(SensorREV2mDistance.class, "distanceRight");
-        distanceLeft = hw.get(SensorREV2mDistance.class, "distanceLeft");
-        */
-
-        // Meccanum Motors Definition and setting prefs
-
-        motorFrontLeft = hardwareMap.dcMotor.get("motorfrontleft");
-        motorBackLeft = hardwareMap.dcMotor.get("motorbackleft");
-        motorFrontRight = hardwareMap.dcMotor.get("motorfrontright");
-        motorBackRight = hardwareMap.dcMotor.get("motorbackright");
-
-        // Reverse the left side motors and set behaviors to stop instead of coast
-        motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        //define arm and servo objects and also spinner
-        servo0 = hardwareMap.get(Servo.class, "bucket");
-        arm = hardwareMap.get(DcMotor.class, "motorlinearslide");
-        spinner = hardwareMap.get(DcMotor.class, "motornom");
-
-        //set prefs for arm and servo
-        servo0.setDirection(Servo.Direction.FORWARD);
-        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        // define hw as the hardware map for possible access later in this class
-        hw = hardwareMap;
-
-        runtime.reset();
-    }
 
     public void motorDriveForward(double speed){
         // drives robot forward
@@ -306,7 +249,9 @@ public class Meccanum extends BaseMeccanum {
         }
         spinnyStop();
     }
-
+    public void alignCamera(){
+        camServo.setPosition(0.5);
+    }
 
     // USEFUL METHODS
         // drive
@@ -314,7 +259,7 @@ public class Meccanum extends BaseMeccanum {
     public void motorDriveForwardEncoded(double speed, int distance){
         // drives robot forward an encoded distance
         // used in auto
-        motorDriveEncoded(-speed, -speed, -speed, -speed, distance);
+        motorDriveEncoded(speed, speed, speed, speed, distance);
     }
     public void motorDriveLeftEncoded(double speed, int distance){
         // drives robot left an encoded distance
@@ -329,7 +274,7 @@ public class Meccanum extends BaseMeccanum {
     public void motorDriveBackwardEncoded(double speed, int distance){
         // drives robot back an encoded distance
         // used in auto
-        motorDriveEncoded(speed, speed, speed, speed, distance);
+        motorDriveEncoded(-speed, -speed, -speed, -speed, distance);
     }
     public void motorDriveForwardTime(double speed, double time){
         // drives robot forward a specified number of millis
@@ -365,7 +310,7 @@ public class Meccanum extends BaseMeccanum {
         // used for teleop mode driving wheels with joysticks
 
 
-        double y = pow(yvec,1); // Remember, this is reversed!
+        double y = -pow(yvec,1); // Remember, this is reversed!
         double x = pow(xvec * 1.1,1); // Counteract imperfect strafing
         rx = pow(spinvec,1);
 
@@ -550,6 +495,18 @@ public class Meccanum extends BaseMeccanum {
 
         moveArm(power);
         delay(time);
+        moveArm(0);
+
+    }
+    public void moveArmEncoded(double power, int ticks){
+        // moves arm for millis time
+        // used in auto
+        arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        int targetTicks = arm.getCurrentPosition() - ticks;
+        moveArm(power);
+        while(targetTicks < arm.getCurrentPosition()) { /*DO NOTHING*/ }
         moveArm(0);
 
     }

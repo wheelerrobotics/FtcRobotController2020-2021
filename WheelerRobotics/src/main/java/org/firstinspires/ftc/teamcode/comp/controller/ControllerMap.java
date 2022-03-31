@@ -51,7 +51,7 @@ public class ControllerMap {
     private void buttonA2(){ meccanum.openServoFull(); }
     private void rumble2(int time){ gamepad2.rumble(time); }
     private void joystickDriver2(double scale){
-        meccanum.moveArm(gamepad2.left_stick_y * scale);
+        meccanum.moveArm(gamepad2.left_stick_y * scale + -0.05);
         /* THIS IS DISABLED< BUT CONCEPT FOR FINE TURNING OF TURNS N STUFF meccanum.rx += gamepad2.right_stick_x/8; */}
 
     public void checkControls(){

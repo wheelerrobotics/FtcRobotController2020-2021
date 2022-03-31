@@ -87,15 +87,13 @@ class ColorIsolationPipeline extends OpenCvPipeline
         FtcDashboard.getInstance().getTelemetry().addData("left", left);
 
         if (right > 5 && left < right) {
-            FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 2");
-            conePosition = 2;
-        } else if (left > 5 && left > right) {
-            FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 1");
-            conePosition = 1;
-        } else {
-            FtcDashboard.getInstance().getTelemetry().addLine("Prediction! 3");
             conePosition = 3;
+        } else if (left > 5 && left > right) {
+            conePosition = 2;
+        } else {
+            conePosition = 1;
         }
+        FtcDashboard.getInstance().getTelemetry().addLine("Prediction! " + conePosition);
     }
     public HashMap<Integer, HashMap<String, Integer>> getDetections(){
         // get specific detection positions, maybe maxer it later?

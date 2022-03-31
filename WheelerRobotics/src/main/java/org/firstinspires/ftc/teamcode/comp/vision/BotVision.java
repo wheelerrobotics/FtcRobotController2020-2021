@@ -38,11 +38,12 @@ public class BotVision {
     ColorIsolationPipeline pipeline = new ColorIsolationPipeline();
 
 
+
     public void init(HardwareMap hardwareMap) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-
-
+        this.setParams(50F, 0.92F, 0.44F, 10F, 0.1F, 0.4F);
+        pipeline.setProcessorSetting(ColorIsolationPipeline.processors.SIMPLE);
         webcam.setPipeline(pipeline);
 
 
@@ -68,9 +69,10 @@ public class BotVision {
     }
 
     public int getConePosition(){
-        pipeline.setProcessorSetting(ColorIsolationPipeline.processors.SIMPLE);
-        int pos = pipeline.getConePosition();
-        pipeline.setProcessorSetting(ColorIsolationPipeline.processors.OFF);
+        int pos = 0;
+        while (pos == 0) { // stall if camera not open
+            pos = pipeline.getConePosition();
+        }
         return pos;
     }
 

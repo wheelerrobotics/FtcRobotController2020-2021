@@ -55,10 +55,10 @@ public class DetectingBlueNav extends LinearOpMode {
         // ()
         delay(1000);
         meccanum.motorDriveEncodedReg(
-                -meccanum.NORMAL_SPEED,
-                -meccanum.NORMAL_SPEED,
-                -meccanum.NORMAL_SPEED,
-                -meccanum.NORMAL_SPEED,
+                meccanum.NORMAL_SPEED,
+                meccanum.NORMAL_SPEED,
+                meccanum.NORMAL_SPEED,
+                meccanum.NORMAL_SPEED,
                 775,
                 telemetry);
         // /\
@@ -72,13 +72,13 @@ public class DetectingBlueNav extends LinearOpMode {
         delay(1000);
         meccanum.moveArmTime(meccanum.ARM_MAX_SPEED, MARKER_AFTERARM);
         // (_
-        meccanum.motorDriveBackEncoded(meccanum.NORMAL_SPEED, 30);
+        meccanum.motorDriveBackwardEncoded(meccanum.NORMAL_SPEED, 30);
         // \/
         meccanum.turnDeg(-25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
         // <~
         meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED, 350);
         // <-
-        meccanum.motorDriveBackEncoded(1, 1400);
+        meccanum.motorDriveBackwardEncoded(1, 1400);
         // /\
         meccanum.turnDeg(180, meccanum.SPIN_MOTORS_SPEED, telemetry);
 
