@@ -18,7 +18,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-class ColorIsolationPipeline extends OpenCvPipeline
+public class ColorIsolationPipeline extends OpenCvPipeline
 {
     int quality = 5;
     private HashMap<Integer, HashMap<String, Integer>> maxes;

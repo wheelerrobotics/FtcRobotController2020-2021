@@ -37,6 +37,9 @@ public class BotVision {
 
     ColorIsolationPipeline pipeline = new ColorIsolationPipeline();
 
+    public void setProc(ColorIsolationPipeline.processors p){
+        pipeline.setProcessorSetting(p);
+    }
 
 
     public void init(HardwareMap hardwareMap) {

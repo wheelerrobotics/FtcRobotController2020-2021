@@ -136,11 +136,18 @@ public class Meccanum extends BaseMeccanum {
         int brp = motorBackRight.getCurrentPosition();
         int flp = motorFrontLeft.getCurrentPosition();
         int frp = motorFrontRight.getCurrentPosition();
-
+        double lastAvg = 0;
+        double thisAvg = 0;
         while(abs(motorBackLeft.getCurrentPosition() - blp) < ticks ||
                 abs(motorFrontRight.getCurrentPosition() - brp) < ticks ||
                 abs(motorFrontLeft.getCurrentPosition() - flp) < ticks ||
-                abs(motorBackRight.getCurrentPosition() - frp) < ticks) { // hopefully checks that it is within the positive or negative threshold of target ticks
+                abs(motorBackRight.getCurrentPosition() - frp) < ticks
+                       // && abs(thisAvg - lastAvg) < avgPower * 3 horribly innacurate as of now
+                ) { // hopefully checks that it is within the positive or negative threshold of target ticks
+            thisAvg = (abs(motorBackLeft.getCurrentPosition() - blp) +
+                    abs(motorFrontRight.getCurrentPosition() - brp) +
+                    abs(motorFrontLeft.getCurrentPosition() - flp) +
+                    abs(motorBackRight.getCurrentPosition() - frp))/4;
             motorDrive(motorFrontLeftPower, motorBackLeftPower, motorFrontRightPower, motorBackRightPower);
         }
         motorStop();

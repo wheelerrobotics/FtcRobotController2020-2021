@@ -29,8 +29,13 @@
 
 package org.firstinspires.ftc.teamcode.comp.driver;
 
+import static org.firstinspires.ftc.teamcode.comp.driver.cong.camRot;
+
 import android.content.Context;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.config.ValueProvider;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -40,6 +45,8 @@ import org.firstinspires.ftc.robotcore.internal.android.dx.cf.attrib.AttEnclosin
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.controller.ControllerMap;
 import org.firstinspires.ftc.teamcode.comp.controller.ControllerMapSINGLE;
+import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
+import org.firstinspires.ftc.teamcode.comp.vision.ColorIsolationPipeline;
 
 import java.io.File;
 
@@ -57,17 +64,21 @@ import java.io.File;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
+
 @TeleOp(name="Daniel's Wonderful Coding Adventure")
 public class servotest extends LinearOpMode {
-
     // Declare OpMode members.
     Meccanum meccanum = new Meccanum();
 
     ControllerMap cm = new ControllerMap();
+    BotVision bv = new BotVision();
     //ControllerMapSINGLE cms = new ControllerMapSINGLE();
 
     private int startupID;
     private Context appContext;
+    FtcDashboard d = FtcDashboard.getInstance();
+    public static double a = 0;
+
 
 
 
@@ -77,8 +88,12 @@ public class servotest extends LinearOpMode {
     }
     @Override
     public void runOpMode() {
+
+        //d.addConfigVariable("camRout", "camRot", );
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        bv.init(hardwareMap);
+        bv.setProc(ColorIsolationPipeline.processors.OFF);
 
         // internal IMU setup
         meccanum.init(hardwareMap);
@@ -96,9 +111,10 @@ public class servotest extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+
             telemetry.addData("servo", meccanum.servo0.getConnectionInfo());
             Orientation angles = meccanum.getAngles();
-
+            meccanum.camServo.setPosition(camRot);
             cm.checkControls();
             cm.checkControls2();
 

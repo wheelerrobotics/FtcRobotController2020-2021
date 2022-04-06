@@ -92,9 +92,9 @@ public class BaseMeccanum {
 
     public FtcDashboard dash = FtcDashboard.getInstance();
 
-    protected DistanceSensor distanceBack;
-    protected DistanceSensor distanceRight;
-    protected DistanceSensor distanceLeft;
+    public DistanceSensor distanceBack;
+    public DistanceSensor distanceRight;
+    public DistanceSensor distanceLeft;
 
 
     protected int startupID;
@@ -120,11 +120,11 @@ public class BaseMeccanum {
         angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
         //distace sensors (unused for now)
-        /*
-        distanceBack = hw.get(SensorREV2mDistance.class, "distanceBack");
-        distanceRight = hw.get(SensorREV2mDistance.class, "distanceRight");
-        distanceLeft = hw.get(SensorREV2mDistance.class, "distanceLeft");
-        */
+
+        distanceBack = hardwareMap.get(DistanceSensor.class, "distanceBack");
+        distanceRight = hardwareMap.get(DistanceSensor.class, "distanceRight");
+        distanceLeft = hardwareMap.get(DistanceSensor.class, "distanceLeft");
+
 
         // Meccanum Motors Definition and setting prefs
 
