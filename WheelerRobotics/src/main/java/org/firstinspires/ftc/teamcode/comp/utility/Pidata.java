@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @Config
 public class Pidata {
     double integral = 0;
-    double derivative = 0;
+    double derivative = 1;
     double proportion = 0;
     double lastError = 0;
     double currentMeasurement = 0;
@@ -18,16 +18,29 @@ public class Pidata {
 
     boolean paused = false;
 
-    public static double ki = 0;
-    public static double kp = 0;
-    public static double kd = 0;
+    double ki = 0;
+    double kp = 0;
+    double kd = 0;
+
+    // time break
+    // rotation shit
+    // threshold and derivative brake
+    // tune value better (get freshman to do this)
+    // make a thing that does drive froward while distance side is a and roattion is b
+    // drive at an angle using same math/logic
+
+    // check edge cases
+    // sensor out of bounds
+    // gyro flip over 0 or 180
+    // gyro oscillation
+    // absolute distance left, perpendicular line, div by sin CAREFUL OF CORNER EDGE CASES
 
     ElapsedTime et = new ElapsedTime();
 
-    public Pidata(double kp, double ki, double kd){
-        this.ki = ki;
-        this.kd = kd;
-        this.kp = kp;
+    public Pidata(double p, double i, double d){
+        ki = i;
+        kd = d;
+        kp = p;
     }
     public Pidata(){}
 
@@ -38,8 +51,12 @@ public class Pidata {
     public void setTarget(double data){
         target = data;
     }
+    public double getDerivative(){
+        return derivative;
+    }
     public double tick(double data){
         if (paused) return 0;
+        if (data > 800) return 0;
         currentMeasurement = data;
         double timeNow = et.milliseconds();
         sinceLastMeasurement = timeNow - sinceStart;

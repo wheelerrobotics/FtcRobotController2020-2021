@@ -31,46 +31,67 @@ public class nav extends Meccanum{
             -1, 1,
             -1, 1
     };
-    public void doTheThing(double l, double b, double r) {
+    public void doTheThing(double l, double b, double r, double breakTime) {
         ElapsedTime et = new ElapsedTime();
         et.reset();
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
         congi c = new congi();
-        double thresh = 1;
-        double rthresh = 1;
+        double thresh = 0.1;
+        double rthresh = 0.1;
         double dl = distanceLeft.getDistance(DistanceUnit.CM);
         double db = distanceBack.getDistance(DistanceUnit.CM);
+        double dri = distanceRight.getDistance(DistanceUnit.CM);
         double dr = getAngles().firstAngle;
-        delay(2000);
-        Pidata pb = new Pidata();
+        Pidata pb = new Pidata(-0.025, 0 ,0); // -0.025, -0.00008, -0.2
         pb.init(db);
         pb.setTarget(b);
 
-        Pidata pl = new Pidata();
+        Pidata pl = new Pidata(-0.025, 0 ,0);
         pl.init(dl);
-        pl.setTarget(b);
+        pl.setTarget(l);
+
+        /*
+        Pidata pri = new Pidata(-0.025, 0 ,0);
+        pri.init(dri);
+        pri.setTarget(ri);
+        */
 
 
-        while (/*abs(dl-l) > thresh || abs(db-b) > thresh || abs(dr-r) > rthresh*/ true){
+        Pidata pr = new Pidata(0.005, 0, 0);
+        pr.init(dr);
+        pr.setTarget(r);
+        double dthresh = 0.05;
+
+
+
+        ElapsedTime start = new ElapsedTime();
+        start.reset();
+        while (true){
             //motorDriveForwardEncoded(0.5, 100);
-            tele.addData("dl", dl);
-            tele.addData("db", db);
-            tele.addData("dr", dr);
+            if (dl < 800) tele.addData("dl", dl);
+            if (db < 800) tele.addData("db", db);
+            if (dr < 800) tele.addData("dr", dr);
+            //if (dri < 800) tele.addData("dri", dri);
+
+             tele.addData("sl", pl.getDerivative());
+             tele.addData("sb", pb.getDerivative());
+             tele.addData("sr", pr.getDerivative());
+    //            tele.addData("sri", pri.getDerivative());
 
             double[] out = {0, 0, 0, 0};
-
-            double el = (dl-l);
-            double er = (r-dr); // error rotation
+            if(Math.random() > 0.6) camServo.setPosition(Math.random()); // really does nothing, but DONT DELETE
+            double el = -pl.tick(dl);
+            double er = pr.tick(dr); // error rotation
             double eb = pb.tick(db);
-
-
+            //double eri = (ri == -1) ? pri.tick(dri) : 0;
 
             tele.addData("el", el);
             tele.addData("eb", eb);
             tele.addData("er", er);
+            //tele.addData("eri", eri);
 
             for (int i = 0; i<out.length; i++) { // add the individual vectors
-                out[i] = el * (c.kd) * this.left[i] + eb * this.back[i]; //+ er * (c.kr) * this.clock[i];
+                out[i] = el * this.left[i] + eb * this.back[i] + er * this.clock[i]; //+ eri * -this.left[i];
             }
 
             double abc = absmac(out); // get max value for scaling
@@ -89,13 +110,27 @@ public class nav extends Meccanum{
             // update vals
             dl = distanceLeft.getDistance(DistanceUnit.CM);
             db = distanceBack.getDistance(DistanceUnit.CM);
+            //dri = distanceRight.getDistance(DistanceUnit.CM);
             dr = getAngles().firstAngle;
 
             tele.addData("o", out);
             tele.update();
+
+            if(
+                    //abs(eri) < thresh &&
+                    abs(eb) < thresh &&
+                    abs(el) < thresh &&
+                    abs(er) < rthresh &&
+                    abs(pb.getDerivative()) > dthresh &&
+                    //abs(pri.getDerivative()) > dthresh &&
+                    abs(pl.getDerivative()) > dthresh &&
+                    abs(pr.getDerivative()) > dthresh
+            ) break;
+
+            if(start.milliseconds() > breakTime) break;
         }
 
-        //motorStop();
+        motorStop();
 
     }
     void driveVector(double[] arr){
