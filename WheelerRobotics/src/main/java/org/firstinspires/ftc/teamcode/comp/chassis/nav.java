@@ -4,53 +4,98 @@ import static java.lang.Math.abs;
 
 import android.view.Display;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.comp.test.congi;
+import org.firstinspires.ftc.teamcode.comp.utility.Pidata;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+@Config
 public class nav extends Meccanum{
     double[] left = {
             1, -1,
             -1, 1
     };
     double[] back = {
-            1, -1,
-            -1, 1
+            -1, -1,
+            -1, -1
     };
     double[] clock = {
-            1, -1,
-            1, -1
+            -1, 1,
+            -1, 1
     };
     public void doTheThing(double l, double b, double r) {
-        double thresh = 10;
+        ElapsedTime et = new ElapsedTime();
+        et.reset();
+        Telemetry tele = FtcDashboard.getInstance().getTelemetry();
+        congi c = new congi();
+        double thresh = 1;
         double rthresh = 1;
-        double dl = distanceLeft.getDistance(DistanceUnit.MM);
-        double db = distanceLeft.getDistance(DistanceUnit.MM);
+        double dl = distanceLeft.getDistance(DistanceUnit.CM);
+        double db = distanceBack.getDistance(DistanceUnit.CM);
         double dr = getAngles().firstAngle;
-        double kd = 0.5; //distance constant
-        double kr = 1; //rot constant
-        while (abs(dl-l) < thresh && abs(db-b) < thresh && abs(dr-r) < rthresh){
+        delay(2000);
+        Pidata pb = new Pidata();
+        pb.init(db);
+        pb.setTarget(b);
+
+        Pidata pl = new Pidata();
+        pl.init(dl);
+        pl.setTarget(b);
+
+
+        while (/*abs(dl-l) > thresh || abs(db-b) > thresh || abs(dr-r) > rthresh*/ true){
+            //motorDriveForwardEncoded(0.5, 100);
+            tele.addData("dl", dl);
+            tele.addData("db", db);
+            tele.addData("dr", dr);
+
             double[] out = {0, 0, 0, 0};
+
             double el = (dl-l);
-            double eb = (db-b);
-            double er = (dr-r);
-            for (int i = 0; i<out.length; i++) {
-                out[i] = el * (kd) * this.left[i] + eb * (kd) * this.back[i] + er * (kr) * this.clock[i];
+            double er = (r-dr); // error rotation
+            double eb = pb.tick(db);
+
+
+
+            tele.addData("el", el);
+            tele.addData("eb", eb);
+            tele.addData("er", er);
+
+            for (int i = 0; i<out.length; i++) { // add the individual vectors
+                out[i] = el * (c.kd) * this.left[i] + eb * this.back[i]; //+ er * (c.kr) * this.clock[i];
             }
-            double abc = absmac(out);
-            for (int i = 0; i<out.length; i++){
-                out[i] *= 1/abs(abc);
+
+            double abc = absmac(out); // get max value for scaling
+                if (abc > 1){
+                    for (int i = 0; i<out.length; i++){ // normalize based on greatest value
+                        out[i] /= abs(abc);
+                    }
             }
+
+            /*for (int i = 0; i<out.length; i++){ // scale down
+                out[i] *= c.speed;
+                //if (out[i] < 0.05) out[i] = 0;
+            }**/
             driveVector(out);
 
-            dl = distanceLeft.getDistance(DistanceUnit.MM);
-            db = distanceLeft.getDistance(DistanceUnit.MM);
+            // update vals
+            dl = distanceLeft.getDistance(DistanceUnit.CM);
+            db = distanceBack.getDistance(DistanceUnit.CM);
             dr = getAngles().firstAngle;
-        }
-        motorStop();
 
+            tele.addData("o", out);
+            tele.update();
+        }
+
+        //motorStop();
 
     }
     void driveVector(double[] arr){
@@ -62,7 +107,7 @@ public class nav extends Meccanum{
     double absmac(double[] arr){
         int outi = 0; // index of max
         for (int i = 0; i<arr.length; i++){
-            if( abs(arr[i]) > arr[outi]){
+            if( abs(arr[i]) > abs(arr[outi])){
                 outi = i;
             }
         }
