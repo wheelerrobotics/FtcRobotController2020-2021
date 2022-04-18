@@ -85,10 +85,10 @@ public class ColorIsolationPipeline extends OpenCvPipeline
         // update cone position by getting if left/right regions have more detected pixels
         FtcDashboard.getInstance().getTelemetry().addData("right", right);
         FtcDashboard.getInstance().getTelemetry().addData("left", left);
-
-        if (right > 5 && left < right) {
+        int thresh = 15;
+        if (right > thresh && left < right) {
             conePosition = 3;
-        } else if (left > 5 && left > right) {
+        } else if (left > thresh && left > right) {
             conePosition = 2;
         } else {
             conePosition = 1;

@@ -9,12 +9,14 @@ package org.firstinspires.ftc.teamcode.comp.test.auto;
 // default to top level
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 
 @Autonomous
+@Disabled
 public class DetectingBlueNav extends LinearOpMode {
     // for non next to caurousel
     Meccanum meccanum = new Meccanum();

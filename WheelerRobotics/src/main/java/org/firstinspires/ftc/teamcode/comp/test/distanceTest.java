@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.comp.test;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
 
 @TeleOp
+@Disabled
 public class distanceTest extends LinearOpMode {
 
     @Override

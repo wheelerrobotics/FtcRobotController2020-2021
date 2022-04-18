@@ -21,6 +21,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -46,7 +47,7 @@ public class BaseMeccanum {
 
      */
 
-    protected final ElapsedTime runtime = new ElapsedTime(); // getting a warning to make it final
+    public final ElapsedTime runtime = new ElapsedTime(); // getting a warning to make it final
 
     public Servo servo0;
     public Servo camServo;
@@ -63,9 +64,9 @@ public class BaseMeccanum {
 
     // static variables
     public final double NORMAL_SPEED = 0.2;
-    public final double SERVO_FULLY_CLOSED = 0.0;
-    public final double SERVO_FULLY_OPENED = 0.5;
-    public final double HALF_SERVO_ANGLE = 0.5;
+    public final double SERVO_FULLY_CLOSED = 0.5;
+    public final double SERVO_FULLY_OPENED = 0.0;
+    public final double HALF_SERVO_ANGLE = 0.0;
     public final double BACK_SERVO_ANGLE = Math.PI;
     public final double ARM_MAX_SPEED = -   0.5;
     public final double HIGH_SPINNER_POWER = 1;
@@ -96,6 +97,8 @@ public class BaseMeccanum {
     public DistanceSensor distanceRight;
     public DistanceSensor distanceLeft;
 
+    public LED led1;
+    public LED led2;
 
     protected int startupID;
     protected Context appContext;
@@ -148,6 +151,9 @@ public class BaseMeccanum {
         arm = hardwareMap.get(DcMotor.class, "arm");
         spinner = hardwareMap.get(DcMotor.class, "spinner");
         spinner.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        led1 = hardwareMap.get(LED.class, "led");
+        led2 = hardwareMap.get(LED.class, "ledd");
 
         //set prefs for arm and servo
         servo0.setDirection(Servo.Direction.FORWARD);

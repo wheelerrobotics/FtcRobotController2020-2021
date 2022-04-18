@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
+import org.firstinspires.ftc.teamcode.comp.chassis.nav;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 
 @Autonomous( name = "Caurousel Blue Nav")
@@ -21,6 +22,15 @@ public class AutoNavBlueC extends LinearOpMode {
     int FOOT = 333;
     double SIDEWAYST = 2 / sqrt(2);
 
+    public static double firstL = 5;
+    public static double firstB = 5;
+    public static double secondL = 72;
+    public static double secondB = 5;
+    public static double firstR = 0;
+    public static double secondR = 0;
+
+
+    nav navi = new nav();
     public void runOpMode() {
         meccanum.init(hardwareMap);
         bv.init(hardwareMap);
@@ -56,7 +66,7 @@ public class AutoNavBlueC extends LinearOpMode {
         meccanum.closeServoFull();
         // ()
         delay(1000);
-        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 775);
+        meccanum.motorDriveForwardEncoded(meccanum.NORMAL_SPEED, 820);
         // /\
         meccanum.turnDeg(65, meccanum.SPIN_MOTORS_SPEED, telemetry);
         // ~>
@@ -68,31 +78,18 @@ public class AutoNavBlueC extends LinearOpMode {
         delay(1000);
         meccanum.moveArmEncoded(meccanum.ARM_MAX_SPEED, MARKER_AFTERARM);
         // (_
-        meccanum.motorDriveBackwardEncoded(meccanum.NORMAL_SPEED, 30);
+        meccanum.motorDriveBackwardEncoded(meccanum.NORMAL_SPEED, 100);
         // \/
         meccanum.turnDeg(25, meccanum.SPIN_MOTORS_SPEED, telemetry); // first spin + 90
         // <~
         delay(100);
         //meccanum.motorDriveEncoded(meccanum.NORMAL_SPEED,200);
         // <-
-        meccanum.motorDriveBackwardEncoded(0.5, 2 * FOOT + 140);
-        // /\
-        meccanum.delay(2000);
-        //
-        // here you are facing the warehouse
-        while (meccanum.distanceLeft.getDistance(DistanceUnit.CM) > 6){
-            meccanum.motorDriveLeft(meccanum.NORMAL_SPEED);
-        }
-        meccanum.motorStop();
-        // ->
-        meccanum.spinnySpinTime(meccanum.OPTIMAL_SPINNER_POWER, 2000);
-        // *
-        // /\
-        meccanum.motorDriveRightEncoded(meccanum.NORMAL_SPEED, (int) floor(2 * FOOT * SIDEWAYST + 40));
-        delay(1000);
-        meccanum.motorDriveBackwardEncoded(meccanum.NORMAL_SPEED, (int) floor(100));
-        // ->
-
+        navi.init(hardwareMap);
+        navi.doTheThing(firstL, firstB, firstR, 3000);
+        delay(100);
+        navi.spinnySpinTime(navi.OPTIMAL_SPINNER_POWER, 5000);
+        navi.doTheThing(secondL, secondB, secondR, 4000);
 
     }
 

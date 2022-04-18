@@ -596,4 +596,10 @@ public class Meccanum extends BaseMeccanum {
         //OBSOLETE
         motorDriveTime(speed, speed, -speed, -speed, time);
     }
+    public void setLed(boolean state){
+        led1.enableLight(state);
+    }
+    public void setLedd(boolean state){
+        led1.enableLight(state);
+    }
 }
