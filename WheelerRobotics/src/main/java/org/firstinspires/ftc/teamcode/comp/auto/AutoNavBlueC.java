@@ -84,13 +84,11 @@ public class AutoNavBlueC extends LinearOpMode {
         // <~
         delay(100);
         //meccanum.motorDriveEncoded(meccanum.NORMAL_SPEED,200);
-        // <-
         navi.init(hardwareMap);
         navi.doTheThing(firstL, firstB, firstR, 3000);
         delay(100);
         navi.spinnySpinTime(navi.OPTIMAL_SPINNER_POWER, 5000);
         navi.doTheThing(secondL, secondB, secondR, 4000);
-
     }
 
     public void delay(double time) {
