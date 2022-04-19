@@ -20,13 +20,12 @@ public class ControllerMap {
         gamepad1 = gp1;
         gamepad2 = gp2;
     }
-    private void leftBumper(boolean on){
-    }
+    private void leftBumper(boolean on){ }
     private void rightBumper(){}
     private void buttonB(){  }
     private void buttonY(){  }
-    private void buttonX(){}
-    private void buttonA(){}
+    private void buttonX(){  }
+    private void buttonA(){  }
     private void leftTrigger(){}
     private void rightTrigger(){}
     private void dpadLeft(){ gamepad2.rumble(500); }
@@ -99,7 +98,7 @@ public class ControllerMap {
             gamepad1.rumble(100);
             warned++;
         }
-        if(meccanum.runtime.time(TimeUnit.SECONDS) < 90 && warned < 2){
+        if(meccanum.runtime.time(TimeUnit.SECONDS) > 90 && warned < 2){
             gamepad2.rumble(500);
             gamepad1.rumble(500);
             warned++;

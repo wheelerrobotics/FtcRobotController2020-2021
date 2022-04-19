@@ -20,22 +20,21 @@ import java.util.Arrays;
 @Config
 public class nav extends Meccanum{
     double[] left = {
-            1, -1,
-            -1, 1
+            1,  -1,
+            -1,  1
     };
     double[] back = {
             -1, -1,
             -1, -1
     };
     double[] clock = {
-            -1, 1,
-            -1, 1
+            -1,  1,
+            -1,  1
     };
     public void doTheThing(double l, double b, double r, double breakTime) {
         ElapsedTime et = new ElapsedTime();
         et.reset();
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
-        congi c = new congi();
         double thresh = 0.1;
         double rthresh = 0.1;
         double dl = distanceLeft.getDistance(DistanceUnit.CM);
@@ -137,7 +136,6 @@ public class nav extends Meccanum{
         ElapsedTime et = new ElapsedTime();
         et.reset();
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
-        congi c = new congi();
         double thresh = 0.1;
         double rthresh = 0.1;
         double dri = distanceRight.getDistance(DistanceUnit.CM);
