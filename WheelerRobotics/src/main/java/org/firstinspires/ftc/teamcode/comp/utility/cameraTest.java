@@ -11,7 +11,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 
 @Config
-@TeleOp
 public class cameraTest extends LinearOpMode {
 
     /*

@@ -31,7 +31,7 @@ public class nav extends Meccanum{
             -1,  1,
             -1,  1
     };
-    public void doTheThing(double l, double b, double r, double breakTime) {
+    public void doTheThing(double l, double b, double r, double breakTime, double scale) {
         ElapsedTime et = new ElapsedTime();
         et.reset();
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
@@ -45,7 +45,7 @@ public class nav extends Meccanum{
         pb.init(db);
         pb.setTarget(b);
 
-        Pidata pl = new Pidata(-0.025, 0 ,0);
+        Pidata pl = new Pidata(-0.030, 0 ,0);
         pl.init(dl);
         pl.setTarget(l);
 
@@ -100,10 +100,10 @@ public class nav extends Meccanum{
                     }
             }
 
-            /*for (int i = 0; i<out.length; i++){ // scale down
-                out[i] *= c.speed;
+            for (int i = 0; i<out.length; i++){ // scale down
+                out[i] *= scale;
                 //if (out[i] < 0.05) out[i] = 0;
-            }**/
+            }
             driveVector(out);
 
             // update vals
@@ -132,7 +132,7 @@ public class nav extends Meccanum{
         motorStop();
 
     }
-    public void doTheThingy(double ri, double b, double r, double breakTime) {
+    public void doTheThingy(double ri, double b, double r, double breakTime, double scale) {
         ElapsedTime et = new ElapsedTime();
         et.reset();
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
@@ -145,7 +145,7 @@ public class nav extends Meccanum{
         pb.init(db);
         pb.setTarget(b);
 
-        Pidata pri = new Pidata(-0.025, 0 ,0);
+        Pidata pri = new Pidata(-0.035, 0 ,0);
         pri.init(dri);
         pri.setTarget(ri);
 
@@ -200,10 +200,11 @@ public class nav extends Meccanum{
                 }
             }
 
-            /*for (int i = 0; i<out.length; i++){ // scale down
-                out[i] *= c.speed;
+
+            for (int i = 0; i<out.length; i++){ // scale down
+                out[i] *= scale;
                 //if (out[i] < 0.05) out[i] = 0;
-            }**/
+            }
             driveVector(out);
 
             // update vals

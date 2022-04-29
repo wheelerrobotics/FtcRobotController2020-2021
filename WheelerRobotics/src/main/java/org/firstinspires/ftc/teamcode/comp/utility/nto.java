@@ -11,7 +11,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 
 @Config
-@Autonomous
 public class nto extends LinearOpMode {
     public static double AMP = 10;
     public static double PH = 90;

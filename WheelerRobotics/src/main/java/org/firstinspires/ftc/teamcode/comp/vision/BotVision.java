@@ -54,7 +54,7 @@ public class BotVision {
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                FtcDashboard.getInstance().startCameraStream(webcam, 20);
+                // FtcDashboard.getInstance().startCameraStream(webcam, 20);
                 webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
                 tele.addLine("Opened!");
                 tele.update();

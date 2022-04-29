@@ -70,7 +70,7 @@ public class AutoNavRed extends LinearOpMode {
         // <~
         meccanum.motorDriveLeftEncoded(meccanum.NORMAL_SPEED, 350);
         // <-
-        meccanum.motorDriveBackwardEncoded(1, 1400);
+        meccanum.motorDriveBackwardEncoded(1, 1600);
         // /\
         meccanum.turnDeg(180, meccanum.SPIN_MOTORS_SPEED, telemetry);
 
