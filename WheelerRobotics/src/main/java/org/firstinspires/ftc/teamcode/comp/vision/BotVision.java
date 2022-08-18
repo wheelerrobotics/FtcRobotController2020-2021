@@ -28,6 +28,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 public class BotVision {
@@ -35,20 +36,10 @@ public class BotVision {
     FtcDashboard dash = FtcDashboard.getInstance();
     Telemetry tele = dash.getTelemetry();
 
-    ColorIsolationPipeline pipeline = new ColorIsolationPipeline();
-
-    public void setProc(ColorIsolationPipeline.processors p){
-        pipeline.setProcessorSetting(p);
-    }
-
-
-    public void init(HardwareMap hardwareMap) {
+    public void init(HardwareMap hardwareMap, OpenCvPipeline pipeline) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        this.setParams(50F, 0.92F, 0.44F, 10F, 0.1F, 0.4F);
-        pipeline.setProcessorSetting(ColorIsolationPipeline.processors.SIMPLE);
         webcam.setPipeline(pipeline);
-
 
         webcam.setMillisecondsPermissionTimeout(2500); // Timeout for obtaining permission is configurable. Set before opening.
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
@@ -67,17 +58,7 @@ public class BotVision {
             }
         });
     }
-    public void setParams(float htar, float star, float ltar, float hthresh, float sthresh, float lthresh) {
-        pipeline.setParams(htar, star, ltar, hthresh, sthresh, lthresh);
-    }
 
-    public int getConePosition(){
-        int pos = 0;
-        while (pos == 0) { // stall if camera not open
-            pos = pipeline.getConePosition();
-        }
-        return pos;
-    }
 
 
 }
