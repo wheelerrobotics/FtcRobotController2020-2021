@@ -1,2 +1,2 @@
-include ':WheelerRobotics'
 include ':FtcRobotController'
+include ':WheelerRobotics'

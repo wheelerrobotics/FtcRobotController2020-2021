@@ -89,3 +89,14 @@ lint/tmp/
 .idea/
 
 .DS_Store
+
+gradle.properties local.properties
+.idea/
+.gradle/
+https:/
+gradle.properties local.properties
+local.properties
+.DS_Store
+/build
+WheelerRobotics/build/
+FtcRobotController/build/
