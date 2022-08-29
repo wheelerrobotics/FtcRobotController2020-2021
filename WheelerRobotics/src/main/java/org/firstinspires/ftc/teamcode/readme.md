@@ -22,14 +22,23 @@ If there is something all robots or chassis share you can add that to the `Robot
 ## Hardware and Config
 On the driver hub (black cube running android), there are config settings for setting up devices. 
 Some devices should have specific names including:
-   - `motor_front_left`: the front left motor.
-   - `motor_front_right`: the front right motor.
-   - `motor_back_left`: the back left motor.
-   - `motor_back_right`: the back right motor.
-   - `distance_left`: the left distance sensor.
-   - `distance_right`: the right distance sensor.
-   - `distance_front`: the front distance sensor.
-   - `distance_back`: the back distance sensor.
+   - `motorFrontLeft`: the front left motor.
+   - `motorFrontRight`: the front right motor.
+   - `motorBackLeft`: the back left motor.
+   - `motorBackRight`: the back right motor.
+   - `distanceLeft`: the left distance sensor.
+   - `distanceRight`: the right distance sensor.
+   - `distanceFront`: the front distance sensor.
+   - `distanceBack`: the back distance sensor.
    - `imu`: the internal imu.
 
 All other stuff can be called whatever as long as it matches up in code.
+
+## Stylistic Conventions
+Here's how your variables should look:
+  - general variables should be in `camelCase`.
+  - methods should be in `camelCase`.
+  - classes and opmodes should be in `PascalCase`.
+  - constants should be in `UPPER_CASE_SNAKE_CASE`.
+  - config names should be in `snake_case`.
+  - branch names should be in `kebab-case`.

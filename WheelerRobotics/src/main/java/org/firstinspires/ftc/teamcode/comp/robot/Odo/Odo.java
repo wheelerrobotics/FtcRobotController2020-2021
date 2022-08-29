@@ -20,14 +20,14 @@ import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 
 public class Odo extends Meccanum implements Robot {
 
-    protected DcMotor aux_motor_1 = null;
-    protected DcMotor aux_motor_2 = null;
+    protected DcMotor auxMotor1 = null;
+    protected DcMotor auxMotor2 = null;
 
     protected Servo servo = null;
-    protected CRServo cr_servo = null;
+    protected CRServo crServo = null;
 
-    protected LED led_1 = null;
-    protected LED led_2 = null;
+    protected LED led1 = null;
+    protected LED led2 = null;
 
     protected HardwareMap hw = null;
 
@@ -52,37 +52,37 @@ public class Odo extends Meccanum implements Robot {
 
         //distace sensors (unused for now)
 
-        distance_back = hardwareMap.get(DistanceSensor.class, "distanceBack");
-        distance_right = hardwareMap.get(DistanceSensor.class, "distanceRight");
-        distance_left = hardwareMap.get(DistanceSensor.class, "distanceLeft");
-        distance_front = null;
+        distanceBack = hardwareMap.get(DistanceSensor.class, "distanceBack");
+        distanceRight = hardwareMap.get(DistanceSensor.class, "distanceRight");
+        distanceLeft = hardwareMap.get(DistanceSensor.class, "distanceLeft");
+        distanceFront = null;
 
         // Meccanum Motors Definition and setting prefs
 
-        motor_front_left = hardwareMap.dcMotor.get("motorFrontLeft");
-        motor_back_left = hardwareMap.dcMotor.get("motorBackLeft");
-        motor_front_right = hardwareMap.dcMotor.get("motorFrontRight");
-        motor_back_right = hardwareMap.dcMotor.get("motorBackRight");
+        motorFrontLeft = hardwareMap.dcMotor.get("motorFrontLeft");
+        motorBackLeft = hardwareMap.dcMotor.get("motorBackLeft");
+        motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
+        motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
 
         // Reverse the left side motors and set behaviors to stop instead of coast
-        motor_front_left.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor_back_left.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        motor_front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor_back_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor_front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor_back_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //define arm and servo objects and also spinner
         servo = hardwareMap.get(Servo.class, "servo");
-        cr_servo = hardwareMap.get(CRServo.class, "cr_servo");
-        aux_motor_1 = hardwareMap.get(DcMotor.class, "arm");
-        aux_motor_1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        aux_motor_1 = hardwareMap.get(DcMotor.class, "spinner");
-        aux_motor_1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        crServo = hardwareMap.get(CRServo.class, "cr_servo");
+        auxMotor2 = hardwareMap.get(DcMotor.class, "arm");
+        auxMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        auxMotor1 = hardwareMap.get(DcMotor.class, "spinner");
+        auxMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        led_1 = hardwareMap.get(LED.class, "led_1");
-        led_2 = hardwareMap.get(LED.class, "led_2");
+        led1 = hardwareMap.get(LED.class, "led_1");
+        led2 = hardwareMap.get(LED.class, "led_2");
 
         //set prefs for arm and servo
         servo.setDirection(Servo.Direction.FORWARD);
@@ -101,7 +101,7 @@ public class Odo extends Meccanum implements Robot {
     public void spinnySpinEncoded(double speed, double target, int start){
         // spins spinner for target ticks
         // used in auto
-        while (abs(aux_motor_1.getCurrentPosition()-start) < target){
+        while (abs(auxMotor1.getCurrentPosition()-start) < target){
             spinnySpin(speed);
         }
         spinnyStop();
@@ -114,13 +114,13 @@ public class Odo extends Meccanum implements Robot {
     }
 
     public void spinnySpin(double speed){
-        aux_motor_1.setPower(speed);
+        auxMotor1.setPower(speed);
     }
 
     public void spinnyStop() {
         // stops spinner spinning
         // used in auto and tele
-        aux_motor_1.setPower(0);
+        auxMotor1.setPower(0);
     }
     public void spinnySpinTime(double speed, double time){
         // spins spinner for time millis

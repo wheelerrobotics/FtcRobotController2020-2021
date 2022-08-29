@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
+import org.firstinspires.ftc.teamcode.comp.vision.pipelines.ColorIsolationPipeline;
+import org.firstinspires.ftc.teamcode.comp.vision.pipelines.DummyCVPipeline;
 
 @Autonomous( name = "Warehouse Blue Nav")
 public class TemplateAuto extends LinearOpMode {
@@ -18,7 +20,7 @@ public class TemplateAuto extends LinearOpMode {
 
     public void runOpMode() {
         bot.init(hardwareMap);
-        bv.init(hardwareMap);
+        bv.init(hardwareMap, new DummyCVPipeline());
 
         waitForStart();
         executeAutomaticSequence1();

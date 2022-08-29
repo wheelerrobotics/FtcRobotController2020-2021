@@ -14,9 +14,9 @@ public interface Chassis {
             // stal program
         }
     }
-    default DistanceSensor try_declare_distance_sensor(String distance_sensor_name, HardwareMap hw){
+    default DistanceSensor tryDeclareDistanceSensor(String distanceSensorName, HardwareMap hw){
         try {
-            return hw.get(DistanceSensor.class, distance_sensor_name);
+            return hw.get(DistanceSensor.class, distanceSensorName);
         } catch (Exception e) {
             return null;
         }
