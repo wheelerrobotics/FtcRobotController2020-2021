@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
+import org.firstinspires.ftc.teamcode.comp.vision.pipelines.ColorIsolationPipeline;
+import org.firstinspires.ftc.teamcode.comp.vision.pipelines.DummyCVPipeline;
 
 @Config
 public class cameraTest extends LinearOpMode {
@@ -39,14 +41,14 @@ public class cameraTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        bv.init(hardwareMap);
+        bv.init(hardwareMap, new ColorIsolationPipeline());
 
         waitForStart();
 
         hsl setting = hsl.OFF;
 
         while (opModeIsActive()){
-            bv.setParams(Float.parseFloat(Double.toString(htar)), Float.parseFloat(Double.toString(star)), Float.parseFloat(Double.toString(ltar)), Float.parseFloat(Double.toString(hthresh)), Float.parseFloat(Double.toString(sthresh)), Float.parseFloat(Double.toString(lthresh)));
+            // bv.setParams(Float.parseFloat(Double.toString(htar)), Float.parseFloat(Double.toString(star)), Float.parseFloat(Double.toString(ltar)), Float.parseFloat(Double.toString(hthresh)), Float.parseFloat(Double.toString(sthresh)), Float.parseFloat(Double.toString(lthresh)));
 
             tele.addData("star", star);
             tele.addData("htar", htar);

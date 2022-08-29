@@ -31,127 +31,128 @@ public class ControllerMapOdo implements ControllerMap {
     }
 
     @Override
-    public void button_b() {
+    public void buttonB() {
 
     }
 
     @Override
-    public void button_y() {
+    public void buttonY() {
 
     }
 
     @Override
-    public void button_x() {
+    public void buttonX() {
 
     }
 
     @Override
-    public void button_a() {
+    public void buttonA() {
 
     }
 
     @Override
-    public void left_trigger() {
+    public void leftTrigger() {
 
     }
 
     @Override
-    public void right_trigger() {
+    public void rightTrigger() {
 
     }
 
     @Override
-    public void dpad_left() {
+    public void dpadLeft() {
 
     }
 
     @Override
-    public void dpad_right() {
+    public void dpadRight() {
 
     }
 
     @Override
-    public void dpad_up() {
+    public void dpadUp() {
 
     }
 
     @Override
-    public void dpad_down() {
+    public void dpadDown() {
 
     }
 
     @Override
-    public void dpad_left_2() {
+    public void dpadLeft2() {
 
     }
 
     @Override
-    public void dpad_right_2() {
+    public void dpadRight2() {
 
     }
 
     @Override
-    public void dpad_up_2() {
+    public void dpadUp2() {
 
     }
 
     @Override
-    public void dpad_down_2() {
+    public void dpadDown2() {
 
     }
 
     @Override
-    public void left_bumper_2() {
+    public void leftBumper2() {
 
     }
 
     @Override
-    public void right_bumper_2() {
+    public void rightBumper2() {
 
     }
 
     @Override
-    public void left_trigger_2() {
+    public void leftTrigger2() {
 
     }
 
     @Override
-    public void right_trigger_2() {
+    public void rightTrigger2() {
 
     }
 
     @Override
-    public void button_x_2() {
+    public void buttonX2() {
 
     }
 
     @Override
-    public void button_b_2() {
+    public void buttonB2() {
 
     }
 
     @Override
-    public void button_a_2() {
+    public void buttonA2() {
 
     }
 
     @Override
-    public void button_y_2() {
+    public void buttonY2() {
 
     }
 
     @Override
-    public void check_special_controls() {
+    public void checkSpecialControls() {
 
     }
 
     @Override
-    public void check_buttons() {
+    public void checkButtons() {
 
     }
 
     @Override
-    public void check_joysticks() {
+    public void checkJoysticks() {
 
     }
+
 }

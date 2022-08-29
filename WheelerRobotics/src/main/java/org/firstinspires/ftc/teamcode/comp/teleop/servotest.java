@@ -43,7 +43,7 @@ public class servotest extends LinearOpMode {
         while (opModeIsActive()) {
             Orientation angles = bot.getAngles();
 
-            cm.check_controls();
+            cm.checkControls();
 
             telemetry.update();
         }

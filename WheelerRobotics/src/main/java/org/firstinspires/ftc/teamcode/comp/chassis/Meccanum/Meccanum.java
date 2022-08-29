@@ -42,15 +42,15 @@ public class Meccanum implements Chassis {
     };
 
     protected BNO055IMU imu = null;
-    protected DistanceSensor distance_back = null;
-    protected DistanceSensor distance_front = null;
-    protected DistanceSensor distance_left = null;
-    protected DistanceSensor distance_right = null;
+    protected DistanceSensor distanceBack = null;
+    protected DistanceSensor distanceFront = null;
+    protected DistanceSensor distanceLeft = null;
+    protected DistanceSensor distanceRight = null;
 
-    protected DcMotor motor_front_right = null;
-    protected DcMotor motor_back_right = null;
-    protected DcMotor motor_front_left = null;
-    protected DcMotor motor_back_left = null;
+    protected DcMotor motorFrontRight = null;
+    protected DcMotor motorBackRight = null;
+    protected DcMotor motorFrontLeft = null;
+    protected DcMotor motorBackLeft = null;
 
     HardwareMap hw = null;
     public void init(HardwareMap hardwareMap){
@@ -74,40 +74,40 @@ public class Meccanum implements Chassis {
         //distace sensors (unused for now)
 
 
-        distance_back = try_declare_distance_sensor("distance_back", hw);
-        distance_right = try_declare_distance_sensor("distance_right", hw);
-        distance_left = try_declare_distance_sensor("distance_left", hw);
-        distance_front = try_declare_distance_sensor("distance_front", hw);
+        distanceBack = tryDeclareDistanceSensor("distanceBack", hw);
+        distanceRight = tryDeclareDistanceSensor("distanceRight", hw);
+        distanceLeft = tryDeclareDistanceSensor("distanceLeft", hw);
+        distanceFront = tryDeclareDistanceSensor("distanceFront", hw);
 
         // Meccanum Motors Definition and setting prefs
 
-        motor_front_left = hardwareMap.dcMotor.get("motor_front_left");
-        motor_back_left = hardwareMap.dcMotor.get("motor_back_left");
-        motor_front_right = hardwareMap.dcMotor.get("motor_front_right");
-        motor_back_right = hardwareMap.dcMotor.get("motor_back_right");
+        motorFrontLeft = hardwareMap.dcMotor.get("motorFrontLeft");
+        motorBackLeft = hardwareMap.dcMotor.get("motorBackLeft");
+        motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
+        motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
 
         // Reverse the left side motors and set behaviors to stop instead of coast
-        motor_front_left.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor_back_left.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        motor_front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor_back_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor_front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motor_back_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // define hw as the hardware map for possible access later in this class
         hw = hardwareMap;
     }
 
     // SUPPORT METHODS
-    public void motorDrive(double motor_front_left_power, double motor_back_left_power, double motor_front_right_power, double motor_back_right_power){
+    public void motorDrive(double motorFrontLeftPower, double motorBackLeftPower, double motorFrontRightPower, double motorBackRightPower){
         // drive the motors at custom powers for each
         // used for every other drive class
 
-        motor_back_left.setPower(motor_back_left_power);
-        motor_front_left.setPower(motor_front_left_power);
-        motor_back_right.setPower(motor_back_right_power);
-        motor_front_right.setPower(motor_front_right_power);
+        motorBackLeft.setPower(motorBackLeftPower);
+        motorFrontLeft.setPower(motorFrontLeftPower);
+        motorBackRight.setPower(motorBackRightPower);
+        motorFrontRight.setPower(motorFrontRightPower);
     }
 
     public void motorDriveXYVectors(double xvec, double yvec, double spinvec){
@@ -147,9 +147,9 @@ public class Meccanum implements Chassis {
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
         double thresh = 0.1;
         double rthresh = 0.1;
-        double dl = distance_left.getDistance(DistanceUnit.CM);
-        double db = distance_back.getDistance(DistanceUnit.CM);
-        double dri = distance_right.getDistance(DistanceUnit.CM);
+        double dl = distanceLeft.getDistance(DistanceUnit.CM);
+        double db = distanceBack.getDistance(DistanceUnit.CM);
+        double dri = distanceRight.getDistance(DistanceUnit.CM);
         double dr = getAngles().firstAngle;
         PID pb = new PID(-0.025, 0 ,0); // -0.025, -0.00008, -0.2
         pb.init(db);
@@ -217,8 +217,8 @@ public class Meccanum implements Chassis {
             driveVector(out);
 
             // update vals
-            dl = distance_left.getDistance(DistanceUnit.CM);
-            db = distance_back.getDistance(DistanceUnit.CM);
+            dl = distanceLeft.getDistance(DistanceUnit.CM);
+            db = distanceBack.getDistance(DistanceUnit.CM);
             //dri = distanceRight.getDistance(DistanceUnit.CM);
             dr = getAngles().firstAngle;
 
@@ -257,8 +257,8 @@ public class Meccanum implements Chassis {
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
         double thresh = 0.1;
         double rthresh = 0.1;
-        double dri = distance_right.getDistance(DistanceUnit.CM);
-        double db = distance_back.getDistance(DistanceUnit.CM);
+        double dri = distanceRight.getDistance(DistanceUnit.CM);
+        double db = distanceBack.getDistance(DistanceUnit.CM);
         double dr = getAngles().firstAngle;
         PID pb = new PID(-0.025, 0 ,0); // -0.025, -0.00008, -0.2
         pb.init(db);
@@ -327,8 +327,8 @@ public class Meccanum implements Chassis {
             driveVector(out);
 
             // update vals
-            dri = distance_right.getDistance(DistanceUnit.CM);
-            db = distance_back.getDistance(DistanceUnit.CM);
+            dri = distanceRight.getDistance(DistanceUnit.CM);
+            db = distanceBack.getDistance(DistanceUnit.CM);
             //dri = distanceRight.getDistance(DistanceUnit.CM);
             dr = getAngles().firstAngle;
 
@@ -358,10 +358,10 @@ public class Meccanum implements Chassis {
      * @param arr 1x4 array which serves as a grid for the motor wheels.
      */
     void driveVector(double[] arr){
-        motor_front_left.setPower(arr[0]);
-        motor_front_right.setPower(arr[1]);
-        motor_back_left.setPower(arr[2]);
-        motor_back_right.setPower(arr[3]);
+        motorFrontLeft.setPower(arr[0]);
+        motorFrontRight.setPower(arr[1]);
+        motorBackLeft.setPower(arr[2]);
+        motorBackRight.setPower(arr[3]);
     }
     /**
      * Takes an array and returns the value furthest from 0.
@@ -385,10 +385,10 @@ public class Meccanum implements Chassis {
     public void motorStop(){
         // stop all the motors
         // used at the end of all movement functions
-        motor_back_left.setPower(0);
-        motor_front_left.setPower(0);
-        motor_back_right.setPower(0);
-        motor_front_right.setPower(0);
+        motorBackLeft.setPower(0);
+        motorFrontLeft.setPower(0);
+        motorBackRight.setPower(0);
+        motorFrontRight.setPower(0);
     }
 
     /**
@@ -412,10 +412,10 @@ public class Meccanum implements Chassis {
     }
     public Distances getDistances(DistanceUnit unit){
         return new Distances(
-                distance_left.getDistance(unit),
-                distance_right.getDistance(unit),
-                distance_back.getDistance(unit),
-                distance_front.getDistance(unit)
+                distanceLeft.getDistance(unit),
+                distanceRight.getDistance(unit),
+                distanceBack.getDistance(unit),
+                distanceFront.getDistance(unit)
         );
     }
 }
