@@ -146,6 +146,7 @@ public class Meccanum implements Chassis {
         et.reset();
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
         double thresh = 0.1;
+        //DISTANCE IN CENTIMETERS
         double rthresh = 0.1;
         double dl = distanceLeft.getDistance(DistanceUnit.CM);
         double db = distanceBack.getDistance(DistanceUnit.CM);
@@ -169,6 +170,8 @@ public class Meccanum implements Chassis {
         PID pr = new PID(0.005, 0, 0);
         pr.init(dr);
         pr.setTarget(r);
+
+
         double dthresh = 0.05;
 
 

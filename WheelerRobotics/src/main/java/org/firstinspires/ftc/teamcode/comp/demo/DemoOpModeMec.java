@@ -1,16 +1,16 @@
 package org.firstinspires.ftc.teamcode.comp.demo;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import static java.lang.Math.abs;
+import static java.lang.Math.pow;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.LED;
-import com.qualcomm.robotcore.hardware.Servo;
 
 
 @TeleOp
-public class DemoOpMode extends LinearOpMode {
+public class DemoOpModeMec extends LinearOpMode {
 
     // declaring motors so they are able to be accessed in other functions
     public DcMotor motorFrontLeft = null;
@@ -27,8 +27,8 @@ public class DemoOpMode extends LinearOpMode {
         motorBackRight = hardwareMap.get(DcMotor.class, "motorBackRight");
         motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -37,20 +37,22 @@ public class DemoOpMode extends LinearOpMode {
         // only run while the opmode is running
         while ( opModeIsActive() ){
             // power left and right motors according to the values of their gamepad sticks
-            driveLeftMotors(gamepad1.right_stick_y);
-            driveRightMotors(gamepad1.left_stick_y);
+            driveLeftMotors(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
         }
 
 
     }
 
-    public void driveLeftMotors(double power){
-        motorBackLeft.setPower(power);
-        motorFrontLeft.setPower(power);
-    }
+    public void driveLeftMotors(double yvec,double  xvec,double  spinvec){
 
-    public void driveRightMotors(double power){
-        motorBackRight.setPower(power);
-        motorFrontRight.setPower(power);
+        double y = -pow(yvec,1); // Remember, this is reversed!
+        double x = pow(xvec * 1.1,1); // Counteract imperfect strafing
+        double rx = pow(spinvec,1);
+
+        double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
+        motorFrontLeft.setPower((y + x + rx) / denominator);
+        motorBackLeft.setPower((y - x + rx) / denominator);
+        motorFrontRight.setPower((y - x - rx) / denominator);
+        motorBackRight.setPower((y + x - rx) / denominator);
     }
 }
