@@ -15,21 +15,21 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
+import org.firstinspires.ftc.teamcode.comp.utility.Encoders;
+import org.firstinspires.ftc.teamcode.comp.utility.Pose;
 
 public class Odo extends Meccanum implements Robot {
 
-    protected DcMotor auxMotor1 = null;
-    protected DcMotor auxMotor2 = null;
-
     protected Servo servo = null;
-    protected CRServo crServo = null;
-
-    protected LED led1 = null;
-    protected LED led2 = null;
 
     protected HardwareMap hw = null;
+
+    private Encoders encoders;
+    private Pose pose;
+    private double dx, dy, dtheta;
 
     @Override
     public void init(HardwareMap hardwareMap) {
@@ -39,7 +39,7 @@ public class Odo extends Meccanum implements Robot {
 
         // internal IMU setup (copied and pasted, idk what it really does, but it works)
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        parameters.angleUnit           = BNO055IMU.AngleUnit.RADIANS;
         parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
         parameters.loggingEnabled      = true;
@@ -55,7 +55,7 @@ public class Odo extends Meccanum implements Robot {
         distanceBack = hardwareMap.get(DistanceSensor.class, "distanceBack");
         distanceRight = hardwareMap.get(DistanceSensor.class, "distanceRight");
         distanceLeft = hardwareMap.get(DistanceSensor.class, "distanceLeft");
-        distanceFront = null;
+        distanceFront = hardwareMap.get(DistanceSensor.class, "distanceFront");
 
         // Meccanum Motors Definition and setting prefs
 
@@ -64,9 +64,13 @@ public class Odo extends Meccanum implements Robot {
         motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
         motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
 
+        motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorFrontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         // Reverse the left side motors and set behaviors to stop instead of coast
-        motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -75,14 +79,6 @@ public class Odo extends Meccanum implements Robot {
 
         //define arm and servo objects and also spinner
         servo = hardwareMap.get(Servo.class, "servo");
-        crServo = hardwareMap.get(CRServo.class, "cr_servo");
-        auxMotor2 = hardwareMap.get(DcMotor.class, "arm");
-        auxMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        auxMotor1 = hardwareMap.get(DcMotor.class, "spinner");
-        auxMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        led1 = hardwareMap.get(LED.class, "led_1");
-        led2 = hardwareMap.get(LED.class, "led_2");
 
         //set prefs for arm and servo
         servo.setDirection(Servo.Direction.FORWARD);
@@ -90,46 +86,27 @@ public class Odo extends Meccanum implements Robot {
         // define hw as the hardware map for possible access later in this class
         hw = hardwareMap;
 
+        pose = new Pose(0, 0, 0);
 
         runtime.reset();
     }
+
+    public Pose getPose() {
+        return this.pose;
+    }
+    /*
+    public sampleSensorsForPose() {
+        this.dx =
+    }
+    public updatePose(){
+
+    }
+*/
 
     public void alignCamera(){
         servo.setPosition(0.5);
     }
 
-    public void spinnySpinEncoded(double speed, double target, int start){
-        // spins spinner for target ticks
-        // used in auto
-        while (abs(auxMotor1.getCurrentPosition()-start) < target){
-            spinnySpin(speed);
-        }
-        spinnyStop();
-    }
-    public void setServo(double angle){
-        // sets claw  to an angle
-        // used to change claw openess
-
-        servo.setPosition(angle);
-    }
-
-    public void spinnySpin(double speed){
-        auxMotor1.setPower(speed);
-    }
-
-    public void spinnyStop() {
-        // stops spinner spinning
-        // used in auto and tele
-        auxMotor1.setPower(0);
-    }
-    public void spinnySpinTime(double speed, double time){
-        // spins spinner for time millis
-        // used in auto
-        spinnySpin(speed);
-        delay(time);
-        spinnyStop();
-    }
-    // angles
     public void playSound(String filename){
         // play a sound
         // doesnt work but would be really fun :(
@@ -138,4 +115,22 @@ public class Odo extends Meccanum implements Robot {
         Context appContext = hw.appContext;
         SoundPlayer.getInstance().startPlaying(appContext, startupID);
     }
+    public Orientation getAngularOrientation(){
+        return imu.getAngularOrientation();
+    }
+    public Encoders getEncoders(){
+        return encoders;
+    }
+    // Late night thoughts so I can continue them tmrw:
+    /*
+    - ideally, run the positioning stuff on a seperate thread
+        - have a method to talk to that thread and get position while we do other stuff on main.
+        - this is convinient because it means we dont have to worry about delay on the position resulting in more accurate measurements.
+    - Look at the gm0 thing i have open to figure out how to use the encoders.
+    - Would be sick if we actually use tensorflow models. Could be useful for object detection of the junctions.
+
+
+
+
+     */
 }

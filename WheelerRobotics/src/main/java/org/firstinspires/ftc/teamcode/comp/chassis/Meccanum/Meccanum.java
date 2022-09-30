@@ -151,7 +151,7 @@ public class Meccanum implements Chassis {
         double dl = distanceLeft.getDistance(DistanceUnit.CM);
         double db = distanceBack.getDistance(DistanceUnit.CM);
         double dri = distanceRight.getDistance(DistanceUnit.CM);
-        double dr = getAngles().firstAngle;
+        double dr = getAnglesDeg().firstAngle;
         PID pb = new PID(-0.025, 0 ,0, false); // -0.025, -0.00008, -0.2
         pb.init(db);
         pb.setTarget(b);
@@ -223,7 +223,7 @@ public class Meccanum implements Chassis {
             dl = distanceLeft.getDistance(DistanceUnit.CM);
             db = distanceBack.getDistance(DistanceUnit.CM);
             //dri = distanceRight.getDistance(DistanceUnit.CM);
-            dr = getAngles().firstAngle;
+            dr = getAnglesDeg().firstAngle;
 
             tele.addData("o", out);
             tele.update();
@@ -262,7 +262,7 @@ public class Meccanum implements Chassis {
         double rthresh = 0.1;
         double dri = distanceRight.getDistance(DistanceUnit.CM);
         double db = distanceBack.getDistance(DistanceUnit.CM);
-        double dr = getAngles().firstAngle;
+        double dr = getAnglesDeg().firstAngle;
         PID pb = new PID(-0.025, 0 ,0, false); // -0.025, -0.00008, -0.2
         pb.init(db);
         pb.setTarget(b);
@@ -333,7 +333,7 @@ public class Meccanum implements Chassis {
             dri = distanceRight.getDistance(DistanceUnit.CM);
             db = distanceBack.getDistance(DistanceUnit.CM);
             //dri = distanceRight.getDistance(DistanceUnit.CM);
-            dr = getAngles().firstAngle;
+            dr = getAnglesDeg().firstAngle;
 
             tele.addData("o", out);
             tele.update();
@@ -398,21 +398,12 @@ public class Meccanum implements Chassis {
      * Gets an orientation which reports all robot rotation
      * @return Orientation object with angle unit degrees
      */
-    public Orientation getAngles() {
-        // gets current angle on field [-180, 180]               i just used interval notation :)
+    public Orientation getAnglesDeg() {
+        // gets current angle on field [-180, 180]
         // useful for angle methods
         return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
     }
 
-    /**
-     * Gets a normalized (0-360) rotation of the robot on the field
-     * @return rotation of robot
-     */
-    public double getAngle360() {
-        // gets normalized angle on field [0, 360]              i just used interval notation :)
-        // useful for angle methods
-        return imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS).firstAngle + 360;
-    }
     public Distances getDistances(DistanceUnit unit){
         return new Distances(
                 distanceLeft.getDistance(unit),

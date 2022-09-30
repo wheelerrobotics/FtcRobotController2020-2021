@@ -7,7 +7,6 @@ import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 // a "simple" class for mapping 2p controller settings
 
 public interface ControllerMap {
-
     void init(Robot robot, Gamepad gp1, Gamepad gp2);
     void leftBumper(boolean on);
     void rightBumper();

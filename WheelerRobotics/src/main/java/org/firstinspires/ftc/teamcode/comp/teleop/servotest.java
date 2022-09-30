@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.ftccommon.SoundPlayer;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -13,7 +14,8 @@ import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 import org.firstinspires.ftc.teamcode.comp.vision.pipelines.DummyCVPipeline;
 
-@TeleOp(name="Daniel's Wonderful Coding Adventure")
+@Disabled
+@TeleOp
 public class servotest extends LinearOpMode {
     // Declare OpMode members.
     Odo bot = new Odo();
@@ -41,7 +43,6 @@ public class servotest extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            Orientation angles = bot.getAngles();
 
             cm.checkControls();
 

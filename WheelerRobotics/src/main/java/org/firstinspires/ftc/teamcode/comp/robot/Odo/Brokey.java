@@ -18,7 +18,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 
-public class Odo extends Meccanum implements Robot {
+public class Brokey extends Meccanum implements Robot {
 
     protected DcMotor auxMotor1 = null;
     protected DcMotor auxMotor2 = null;
@@ -75,14 +75,14 @@ public class Odo extends Meccanum implements Robot {
 
         //define arm and servo objects and also spinner
         servo = hardwareMap.get(Servo.class, "servo");
-        crServo = hardwareMap.get(CRServo.class, "cr_servo");
+        // crServo = hardwareMap.get(CRServo.class, "cr_servo");
         auxMotor2 = hardwareMap.get(DcMotor.class, "arm");
         auxMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         auxMotor1 = hardwareMap.get(DcMotor.class, "spinner");
         auxMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        led1 = hardwareMap.get(LED.class, "led_1");
-        led2 = hardwareMap.get(LED.class, "led_2");
+  //      led1 = hardwareMap.get(LED.class, "led_1");
+//        led2 = hardwareMap.get(LED.class, "led_2");
 
         //set prefs for arm and servo
         servo.setDirection(Servo.Direction.FORWARD);
@@ -98,14 +98,6 @@ public class Odo extends Meccanum implements Robot {
         servo.setPosition(0.5);
     }
 
-    public void spinnySpinEncoded(double speed, double target, int start){
-        // spins spinner for target ticks
-        // used in auto
-        while (abs(auxMotor1.getCurrentPosition()-start) < target){
-            spinnySpin(speed);
-        }
-        spinnyStop();
-    }
     public void setServo(double angle){
         // sets claw  to an angle
         // used to change claw openess
@@ -113,6 +105,12 @@ public class Odo extends Meccanum implements Robot {
         servo.setPosition(angle);
     }
 
+    public void move(double power){
+        // sets arm to a power
+        // used to change arm position
+
+        auxMotor2.setPower(power);
+    }
     public void spinnySpin(double speed){
         auxMotor1.setPower(speed);
     }
@@ -121,13 +119,6 @@ public class Odo extends Meccanum implements Robot {
         // stops spinner spinning
         // used in auto and tele
         auxMotor1.setPower(0);
-    }
-    public void spinnySpinTime(double speed, double time){
-        // spins spinner for time millis
-        // used in auto
-        spinnySpin(speed);
-        delay(time);
-        spinnyStop();
     }
     // angles
     public void playSound(String filename){

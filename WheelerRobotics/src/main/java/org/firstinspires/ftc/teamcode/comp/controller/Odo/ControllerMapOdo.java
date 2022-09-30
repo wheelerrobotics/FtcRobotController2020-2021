@@ -9,11 +9,10 @@ import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 // a "simple" class for mapping 2p controller settings
 
 public class ControllerMapOdo implements ControllerMap {
-    private Robot bot;
-    private Gamepad gamepad1;
-    private Gamepad gamepad2;
+    Odo bot = null;
+    Gamepad gamepad1 = null;
+    Gamepad gamepad2 = null;
 
-    @Override
     public void init(Robot robot, Gamepad gp1, Gamepad gp2){
         bot = (Odo) robot;
         gamepad1 = gp1;
@@ -145,14 +144,33 @@ public class ControllerMapOdo implements ControllerMap {
 
     }
 
-    @Override
-    public void checkButtons() {
+    public void spin180() {
 
     }
 
     @Override
-    public void checkJoysticks() {
+    public void checkButtons() {
+        if (gamepad2.a) buttonA2();
+        if (gamepad2.b) buttonB2();
+        if (gamepad2.x) buttonX2();
+        if (gamepad2.y) buttonY2();
+        if (gamepad1.a) buttonA();
+        if (gamepad1.b) buttonB();
+        if (gamepad1.x) buttonX();
+        if (gamepad1.y) buttonY();
+        if (gamepad2.dpad_down) dpadDown2();
+        if (gamepad2.dpad_up) dpadUp2();
+        if (gamepad2.dpad_left) dpadLeft2();
+        if (gamepad2.dpad_right) dpadRight2();
+        if (gamepad1.dpad_down) dpadDown();
+        if (gamepad1.dpad_up) dpadUp();
+        if (gamepad1.dpad_left) dpadLeft();
+        if (gamepad1.dpad_right) dpadRight();
+    }
 
+    @Override
+    public void checkJoysticks() {
+        bot.motorDriveXYVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
     }
 
 }
