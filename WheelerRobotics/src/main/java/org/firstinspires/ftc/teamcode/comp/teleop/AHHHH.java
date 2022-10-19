@@ -20,14 +20,12 @@ public class AHHHH extends LinearOpMode {
         ControllerMapOdo cmo = new ControllerMapOdo();
         cmo.init(o, gamepad1, gamepad2);
 
-        int startupID = hardwareMap.appContext.getResources().getIdentifier("startup", "raw", hardwareMap.appContext.getPackageName());
-        Context appContext = hardwareMap.appContext;
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
-        SoundPlayer.getInstance().startPlaying(appContext, startupID);
 
         while (opModeIsActive()) {
             cmo.checkControls();
+            o.getPrincipalTag();
         }
     }
 }

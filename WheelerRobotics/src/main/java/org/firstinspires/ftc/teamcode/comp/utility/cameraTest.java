@@ -9,10 +9,14 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
+import org.firstinspires.ftc.teamcode.comp.vision.pipelines.AprilTagDetectionPipeline;
 import org.firstinspires.ftc.teamcode.comp.vision.pipelines.ColorIsolationPipeline;
 import org.firstinspires.ftc.teamcode.comp.vision.pipelines.DummyCVPipeline;
+import org.openftc.apriltag.AprilTagDetection;
 
-@Config
+import java.util.ArrayList;
+
+@TeleOp
 public class cameraTest extends LinearOpMode {
 
     /*
@@ -24,63 +28,87 @@ public class cameraTest extends LinearOpMode {
     star	0.92
     sthresh	0.1
      */
+    @Config
+    public static class fig {
+        public static double fx = 578.272;
+        public static double fy = 578.272;
+        public static double cx = 402.145;
+        public static double cy = 221.506;
 
-    private BotVision bv = new BotVision();
-    enum hsl {
-            HUE, SATURATION, LUMINANCE, OFF
+        // UNITS ARE METERS
+        public static double tagsize = 0.166;
     }
-    private Telemetry tele = FtcDashboard.getInstance().getTelemetry();
+    private AprilTagDetectionPipeline aprilTagDetectionPipeline = null;
+    private BotVision bv = new BotVision();
 
-    public static double htar = 0F;
-    public static double star = 0.5F;
-    public static double ltar = 0.5F;
+    static final double FEET_PER_METER = 3.28084;
 
-    public static double hthresh = 0F;
-    public static double sthresh = 0.5F;
-    public static double lthresh = 0.5F;
+    // Lens intrinsics
+    // UNITS ARE PIXELS
+    // NOTE: this calibration is for the C920 webcam at 800x448.
+    // You will need to do your own calibration for other configurations!
+
+    int numFramesWithoutDetection = 0;
+    Telemetry tele = FtcDashboard.getInstance().getTelemetry();
+    final float DECIMATION_HIGH = 3;
+    final float DECIMATION_LOW = 2;
+    final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 1.0f;
+    final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 4;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        bv.init(hardwareMap, new ColorIsolationPipeline());
+        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(fig.tagsize, fig.fx, fig.fy, fig.cx, fig.cy);
+        bv.init(hardwareMap, aprilTagDetectionPipeline);
+
 
         waitForStart();
 
-        hsl setting = hsl.OFF;
-
         while (opModeIsActive()){
-            // bv.setParams(Float.parseFloat(Double.toString(htar)), Float.parseFloat(Double.toString(star)), Float.parseFloat(Double.toString(ltar)), Float.parseFloat(Double.toString(hthresh)), Float.parseFloat(Double.toString(sthresh)), Float.parseFloat(Double.toString(lthresh)));
+            ArrayList<AprilTagDetection> detections = aprilTagDetectionPipeline.getDetectionsUpdate();
+            if(detections!=null)
+            {
+                tele.addData("FPS", bv.webcam.getFps());
+                tele.addData("Overhead ms", bv.webcam.getOverheadTimeMs());
+                tele.addData("Pipeline ms", bv.webcam.getPipelineTimeMs());
 
-            tele.addData("star", star);
-            tele.addData("htar", htar);
-            tele.addData("ltar", ltar);
+                // If we don't see any tags
+                if(detections.size()==0)
+                {
+                    numFramesWithoutDetection++;
 
-            tele.addData("sthresh", sthresh);
-            tele.addData("hthresh", hthresh);
-            tele.addData("lthresh", lthresh);
+                    // If we haven't seen a tag for a few frames, lower the decimation
+                    // so we can hopefully pick one up if we're e.g. far back
+                    if(numFramesWithoutDetection>=THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION)
+                    {
+                        aprilTagDetectionPipeline.setDecimation(DECIMATION_LOW);
+                    }
+                }
+                // We do see tags!
+                else
+                {
+                    numFramesWithoutDetection=0;
 
-            /*if(gamepad1.dpad_down){
-                setting = hsl.HUE;
-            }else if (gamepad1.dpad_up){
-                setting = hsl.SATURATION;
-            }else if(gamepad1.dpad_left){
-                setting = hsl.LUMINANCE;
-            }else if(gamepad1.dpad_right){
-                setting = hsl.OFF;
-            }
+                    // If the target is within 1 meter, turn on high decimation to
+                    // increase the frame rate
+                    if(detections.get(0).pose.z<THRESHOLD_HIGH_DECIMATION_RANGE_METERS)
+                    {
+                        aprilTagDetectionPipeline.setDecimation(DECIMATION_HIGH);
+                    }
 
-            if(setting == hsl.LUMINANCE){
-                ltar -= gamepad1.left_stick_y/2000;
-                lthresh -= gamepad1.right_stick_y/2000;
-            }else if(setting == hsl.HUE){
-                htar -= gamepad1.left_stick_y/100;
-                hthresh -= gamepad1.right_stick_y/100;
-            }else if(setting == hsl.SATURATION){
-                star -= gamepad1.left_stick_y/2000;
-                sthresh -= gamepad1.right_stick_y/2000;
-            }*/
+                    for(AprilTagDetection detection:detections)
+                    {
+                        tele.addLine(String.format("\nDetected tag ID=%d",detection.id));
+                        tele.addLine(String.format("Translation X: %.2f feet",detection.pose.x*FEET_PER_METER));
+                        tele.addLine(String.format("Translation Y: %.2f feet",detection.pose.y*FEET_PER_METER));
+                        tele.addLine(String.format("Translation Z: %.2f feet",detection.pose.z*FEET_PER_METER));
+                        tele.addLine(String.format("Rotation Yaw: %.2f degrees",Math.toDegrees(detection.pose.yaw)));
+                        tele.addLine(String.format("Rotation Pitch: %.2f degrees",Math.toDegrees(detection.pose.pitch)));
+                        tele.addLine(String.format("Rotation Roll: %.2f degrees",Math.toDegrees(detection.pose.roll)));
+                    }
+                }
 
-
-
+                tele.update();
+                }
         }
     }
 }

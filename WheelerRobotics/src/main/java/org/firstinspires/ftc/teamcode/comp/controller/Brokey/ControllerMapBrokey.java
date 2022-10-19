@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.comp.controller.Brokey;
 
+import static java.lang.Double.max;
+
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.comp.controller.ControllerMap;
@@ -13,6 +15,7 @@ public class ControllerMapBrokey implements ControllerMap {
     Brokey bot = null;
     Gamepad gamepad1 = null;
     Gamepad gamepad2 = null;
+    boolean notOrbiting = true;
 
     public void init(Robot robot, Gamepad gp1, Gamepad gp2){
         bot = (Brokey) robot;
@@ -47,7 +50,13 @@ public class ControllerMapBrokey implements ControllerMap {
 
     @Override
     public void buttonA() {
-
+        notOrbiting = false;
+        // robot-radius = 20cm
+        //
+        // orbit distance = 1ft or
+        double newRight = 0;
+        double newLeft = gamepad1.left_stick_y;
+        bot.motorDrive(newLeft, newLeft, newRight, newRight);
     }
 
     @Override
@@ -122,21 +131,23 @@ public class ControllerMapBrokey implements ControllerMap {
 
     @Override
     public void buttonX2() {
-
+        bot.setServo(-1);
     }
 
     @Override
     public void buttonB2() {
+        bot.setServo(Math.PI);
 
     }
 
     @Override
     public void buttonA2() {
-
+        bot.setServo(0);
     }
 
     @Override
     public void buttonY2() {
+        bot.setServo(0.5);
 
     }
 
@@ -156,6 +167,7 @@ public class ControllerMapBrokey implements ControllerMap {
         if (gamepad2.x) buttonX2();
         if (gamepad2.y) buttonY2();
         if (gamepad1.a) buttonA();
+        else notOrbiting = true;
         if (gamepad1.b) buttonB();
         if (gamepad1.x) buttonX();
         if (gamepad1.y) buttonY();
@@ -171,8 +183,8 @@ public class ControllerMapBrokey implements ControllerMap {
 
     @Override
     public void checkJoysticks() {
-        bot.motorDriveXYVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
-
+        if (notOrbiting) bot.motorDriveXYVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+        bot.moveArm(gamepad2.left_stick_y - 0.04);
     }
 
 }

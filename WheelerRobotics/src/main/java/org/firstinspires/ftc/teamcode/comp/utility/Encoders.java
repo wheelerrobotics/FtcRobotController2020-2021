@@ -1,14 +1,9 @@
 package org.firstinspires.ftc.teamcode.comp.utility;
 
 public class Encoders {
-    int left, right, center;
+    public int left, right, center;
 
     Encoders(int left, int right, int center){
-        this.left = left;
-        this.right = right;
-        this.center = center;
-    }
-    public void setEncoders(int left, int right, int center){
         this.left = left;
         this.right = right;
         this.center = center;

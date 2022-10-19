@@ -12,6 +12,7 @@ public class ControllerMapOdo implements ControllerMap {
     Odo bot = null;
     Gamepad gamepad1 = null;
     Gamepad gamepad2 = null;
+    boolean notOrbiting = true;
 
     public void init(Robot robot, Gamepad gp1, Gamepad gp2){
         bot = (Odo) robot;
@@ -46,7 +47,13 @@ public class ControllerMapOdo implements ControllerMap {
 
     @Override
     public void buttonA() {
-
+        notOrbiting = false;
+        // robot-radius = 20cm
+        //
+        // orbit distance = 1ft or
+        double newRight = 0;
+        double newLeft = gamepad1.left_stick_y;
+        bot.motorDrive(newLeft, newLeft, newRight, newRight);
     }
 
     @Override
@@ -155,6 +162,7 @@ public class ControllerMapOdo implements ControllerMap {
         if (gamepad2.x) buttonX2();
         if (gamepad2.y) buttonY2();
         if (gamepad1.a) buttonA();
+        else notOrbiting = true;
         if (gamepad1.b) buttonB();
         if (gamepad1.x) buttonX();
         if (gamepad1.y) buttonY();
@@ -170,7 +178,7 @@ public class ControllerMapOdo implements ControllerMap {
 
     @Override
     public void checkJoysticks() {
-        bot.motorDriveXYVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+        bot.motorDriveXYVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
     }
 
 }

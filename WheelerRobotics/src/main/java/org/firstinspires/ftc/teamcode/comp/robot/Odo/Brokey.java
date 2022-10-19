@@ -105,7 +105,7 @@ public class Brokey extends Meccanum implements Robot {
         servo.setPosition(angle);
     }
 
-    public void move(double power){
+    public void moveArm(double power){
         // sets arm to a power
         // used to change arm position
 
