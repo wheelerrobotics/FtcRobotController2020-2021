@@ -35,6 +35,7 @@ public class BotVision {
     public OpenCvWebcam webcam;
     FtcDashboard dash = FtcDashboard.getInstance();
     Telemetry tele = dash.getTelemetry();
+    public boolean inited = false;
 
     public void init(HardwareMap hardwareMap, OpenCvPipeline pipeline) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -57,6 +58,7 @@ public class BotVision {
                 tele.update();
             }
         });
+        inited = true;
     }
 
 

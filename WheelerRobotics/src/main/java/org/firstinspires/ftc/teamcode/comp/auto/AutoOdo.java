@@ -24,10 +24,9 @@ public class AutoOdo extends LinearOpMode {
         bot.init(hardwareMap);
 
         waitForStart();
-        while (opModeIsActive()){
-            //int conePosition = bot.getPrincipalTag();
-            tele.addData("Cone Position", bot.detections );
-            tele.update();
-        }
+
+        int conePosition = bot.getPrincipalTag();
+        tele.addData("Cone Position", conePosition );
+        tele.update();
     }
 }

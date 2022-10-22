@@ -31,19 +31,16 @@ import org.openftc.apriltag.AprilTagDetection;
 import java.util.ArrayList;
 
 public class Odo extends Meccanum implements Robot {
-
     protected Servo servo = null;
     protected Telemetry tele = tele = FtcDashboard.getInstance().getTelemetry();
     protected HardwareMap hw = null;
 
-    public boolean detecting = true;
-    public BotVision bv = new BotVision();
-    public AprilTagDetectionPipeline atdp =  new AprilTagDetectionPipeline(0.166, 578.272, 578.272, 402.145, 221.506);
 
     private Encoders encoders;
     private Pose pose;
     private double dx, dy, dtheta;
-    public ArrayList<AprilTagDetection> detections = new ArrayList<>();
+
+    AprilThread at = new AprilThread();
 
     @Override
     public void init(HardwareMap hardwareMap) {
@@ -80,7 +77,7 @@ public class Odo extends Meccanum implements Robot {
         motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        //define arm and servo objects and also spinner
+        // define arm and servo objects and also spinner
         servo = hardwareMap.get(Servo.class, "servo");
 
         //set prefs for arm and servo
@@ -89,13 +86,11 @@ public class Odo extends Meccanum implements Robot {
         // define hw as the hardware map for possible access later in this class
         hw = hardwareMap;
 
-        bv.init(hardwareMap, atdp);
-        AprilThread at = new AprilThread();
-        at.start();
-
         pose = new Pose(0, 0, 0);
         PoseThread pt = new PoseThread();
         pt.start();
+
+        at.start();
 
         runtime.reset();
     }
@@ -116,9 +111,11 @@ public class Odo extends Meccanum implements Robot {
     public void alignCamera(){
         servo.setPosition(0.5);
     }
-    public int getPrincipalTag() {
-        return ((detections != null) ? detections.get(0).id : 0);
+
+    public int getPrincipalTag(){
+        return at.getDetected();
     }
+
     public void playSound(String filename){
         // play a sound
         // doesnt work but would be really fun :(
@@ -155,6 +152,19 @@ public class Odo extends Meccanum implements Robot {
 
      */
     private class AprilThread extends Thread {
+
+        public ArrayList<AprilTagDetection> detections = new ArrayList<>();
+        public boolean detecting = false;
+        public BotVision bv = new BotVision();
+        public AprilTagDetectionPipeline atdp =  new AprilTagDetectionPipeline(0.166, 578.272, 578.272, 402.145, 221.506);
+
+        int numFramesWithoutDetection = 0;
+        final int DECIMATION_LOW = 2;
+        final int DECIMATION_HIGH = 3;
+        final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 2.0f;
+        final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 7;
+        public int detected = 0;
+
         public AprilThread()
         {
             this.setName("AprilThread");
@@ -163,39 +173,41 @@ public class Odo extends Meccanum implements Robot {
         }
         @Override
         public void run() {
-            int numFramesWithoutDetection = 0;
-            final int DECIMATION_LOW = 2;
-            final int DECIMATION_HIGH = 3;
-            final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 1.0f;
-            final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 4;
+            bv.init(hw, atdp);
 
-            while (detecting) {
-                detections = atdp.getDetectionsUpdate();
-                if (detections != null) {
 
-                    // If we don't see any tags
-                    if (detections.size() == 0) {
-                        numFramesWithoutDetection++;
+        }
+        public int getDetected(){
+            return checkDetections();
+        }
+        public int checkDetections() {
+            detections = atdp.getDetectionsUpdate();
+            if (detections != null) {
 
-                        // If we haven't seen a tag for a few frames, lower the decimation
-                        // so we can hopefully pick one up if we're e.g. far back
-                        if (numFramesWithoutDetection >= THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION) {
-                            atdp.setDecimation(DECIMATION_LOW);
-                        }
+                // If we don't see any tags
+                if (detections.size() == 0) {
+                    numFramesWithoutDetection++;
+
+                    // If we haven't seen a tag for a few frames, lower the decimation
+                    // so we can hopefully pick one up if we're e.g. far back
+                    if (numFramesWithoutDetection >= THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION) {
+                        atdp.setDecimation(DECIMATION_LOW);
                     }
-                    // We do see tags!
-                    else {
-                        numFramesWithoutDetection = 0;
-
-                        // If the target is within 1 meter, turn on high decimation to
-                        // increase the frame rate
-                        if (detections.get(0).pose.z < THRESHOLD_HIGH_DECIMATION_RANGE_METERS) {
-                            atdp.setDecimation(DECIMATION_HIGH);
-                        }
-                    }
-
                 }
+                // We do see tags!
+                else {
+                    numFramesWithoutDetection = 0;
+
+                    // If the target is within 1 meter, turn on high decimation to
+                    // increase the frame rate
+                    if (detections.get(0).pose.z < THRESHOLD_HIGH_DECIMATION_RANGE_METERS) {
+                        atdp.setDecimation(DECIMATION_HIGH);
+                    }
+                }
+
             }
+
+            return ((detections != null && detections.size() > 0) ? detections.get(0).id : 0);
         }
     }
 
