@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.comp.utility;
 public class Encoders {
     public int left, right, center;
 
-    Encoders(int left, int right, int center){
+    public Encoders(int left, int right, int center){
         this.left = left;
         this.right = right;
         this.center = center;

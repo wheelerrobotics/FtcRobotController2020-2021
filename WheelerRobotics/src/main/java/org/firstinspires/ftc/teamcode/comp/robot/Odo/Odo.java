@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.comp.robot.Odo;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 
 import android.content.Context;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
@@ -16,8 +18,10 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.LED;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
@@ -30,15 +34,26 @@ import org.openftc.apriltag.AprilTagDetection;
 
 import java.util.ArrayList;
 
+@Config
 public class Odo extends Meccanum implements Robot {
     protected Servo servo = null;
     protected Telemetry tele = tele = FtcDashboard.getInstance().getTelemetry();
     protected HardwareMap hw = null;
+    public static double xp = 0.00002;
+    public static double xd = 0.0004;
+    public static double yp = 0.00002;
+    public static double yd = 0.0004;
+    public static double dthresh = 0.001;
+
+    double xTarget = 0;
+    double yTarget = 0;
 
 
-    private Encoders encoders;
+    private Encoders encoders = new Encoders(0, 0, 0);
     private Pose pose;
     private double dx, dy, dtheta;
+
+    private final double TICKS_PER_CM = 8192 / (3.5 * PI);
 
     AprilThread at = new AprilThread();
 
@@ -85,9 +100,9 @@ public class Odo extends Meccanum implements Robot {
 
         // define hw as the hardware map for possible access later in this class
         hw = hardwareMap;
-
+        
         pose = new Pose(0, 0, 0);
-        PoseThread pt = new PoseThread();
+        PIDThread pt = new PIDThread();
         pt.start();
 
         at.start();
@@ -116,6 +131,68 @@ public class Odo extends Meccanum implements Robot {
         return at.getDetected();
     }
 
+    public void pidDrive(double x, double y) {
+        x = x * TICKS_PER_CM;
+        y = y * TICKS_PER_CM;
+        ElapsedTime et = new ElapsedTime();
+        et.reset();
+        Telemetry tele = FtcDashboard.getInstance().getTelemetry();
+        double dx = encoders.left;
+        double dy = encoders.right;
+
+        PID px = new PID(xp, 0 ,xd, false); // -0.025, -0.00008, -0.2
+        px.init(dy);
+        px.setTarget(x);
+
+        PID py = new PID(yp, 0, yd, false);
+        py.init(dy);
+        py.setTarget(y);
+
+
+        ElapsedTime start = new ElapsedTime();
+        start.reset();
+        while (abs(px.getDerivative()) > dthresh && abs(py.getDerivative()) > dthresh){
+            px.setConsts(xp, 0, xd);
+            py.setConsts(yp, 0, yd);
+
+            tele.addData("sx", px.getDerivative());
+            tele.addData("sy", py.getDerivative());
+
+            double[] out = {0, 0, 0, 0};
+            double ex = px.tick(dx);
+            double ey = py.tick(dy);
+
+            tele.addData("ex", ex);
+            tele.addData("ey", ey);
+
+            for (int i = 0; i<out.length; i++) { // add the individual vectors
+                out[i] = ex * -this.left[i] + ey * -this.back[i];
+            }
+
+            double abc = absmac(out); // get max value for scaling
+            if (abc > 1){
+                for (int i = 0; i<out.length; i++){ // normalize based on greatest value
+                    out[i] /= abs(abc);
+                }
+            }
+
+            driveVector(out);
+
+            // update vals
+            updateEncoders();
+            dx = motorFrontLeft.getCurrentPosition();
+            dy = ( - motorBackRight.getCurrentPosition() + motorBackLeft.getCurrentPosition()) / 2f;
+
+            tele.addData("encr", motorBackLeft.getCurrentPosition());
+            tele.addData("encl", -motorBackRight.getCurrentPosition());
+            tele.addData("encc", motorFrontLeft.getCurrentPosition());
+
+            tele.addData("o", out);
+            tele.update();
+
+        }
+    }
+
     public void playSound(String filename){
         // play a sound
         // doesnt work but would be really fun :(
@@ -134,11 +211,11 @@ public class Odo extends Meccanum implements Robot {
     public void updateEncoders(){
         try {
             encoders.right = motorBackLeft.getCurrentPosition();
-            encoders.left = motorBackRight.getCurrentPosition();
+            encoders.left = - motorBackRight.getCurrentPosition();
             encoders.center = motorFrontLeft.getCurrentPosition();
         }
         catch (Exception e) {
-
+            e.printStackTrace();
         }
 
     }
@@ -211,9 +288,22 @@ public class Odo extends Meccanum implements Robot {
         }
     }
 
-    private class PoseThread extends Thread
+    private class PIDThread extends Thread
     {
-        public PoseThread()
+        ElapsedTime et = new ElapsedTime();
+        protected double[] left = {
+                1,  -1,
+                -1,  1
+        };
+        protected double[] back = {
+                -1, -1,
+                -1, -1
+        };
+        protected double[] clock = {
+                -1,  1,
+                -1,  1
+        };
+        public PIDThread()
         {
             this.setName("PoseThread");
 
@@ -227,21 +317,64 @@ public class Odo extends Meccanum implements Robot {
             // we record the Y values in the main class to make showing them in telemetry
             // easier.
 
+
+            Telemetry tele = FtcDashboard.getInstance().getTelemetry();
+            double dx = encoders.left;
+            double dy = encoders.right;
+
+            PID py = new PID(yp, 0, yd, false); // don't need to correct for sensor jitter because we are using encoders
+            py.init(dy);
+            PID px = new PID(xp, 0 ,xd, false); // -0.025, -0.00008, -0.2
+            px.init(dy);
+
             while (!isInterrupted()) {
                 try {
-                    //updateEncoders();
-                    int center = motorFrontLeft.getCurrentPosition();
-                    int right = motorBackLeft.getCurrentPosition();
-                    int left = motorBackRight.getCurrentPosition();
+                    // TODO: add dimension for rotation, will involve calculating x/y with rotation
+                    //  in mind thus a combination of current x/y encoder readings. We want to
+                    //  maintain an absolute positioning system (field centric)
+                    double x = xTarget * TICKS_PER_CM;
+                    double y = yTarget * TICKS_PER_CM;
+                    // double r = rTarget * TICKS_PER_CM;
 
-                    pose.setPose(center, (left + right) / 2f, left - right);
+                    px.setConsts(xp, 0, xd);
+                    py.setConsts(yp, 0, yd);
+                    px.setTarget(x);
+                    py.setTarget(y);
 
-                    //tele.addData("r", pose.x);
-                    //tele.addData("l", pose.y);
-                    //tele.addData("c", pose.theta);
+                    tele.addData("sx", px.getDerivative());
+                    tele.addData("sy", py.getDerivative());
 
-                    //tele.update();
-                    // telemetry.update();
+                    double[] out = {0, 0, 0, 0};
+                    double ex = px.tick(dx);
+                    double ey = py.tick(dy);
+
+                    tele.addData("ex", ex);
+                    tele.addData("ey", ey);
+
+                    for (int i = 0; i<out.length; i++) { // add the individual vectors
+                        out[i] = ex * -this.left[i] + ey * -this.back[i];
+                    }
+
+                    // TODO: is there anything wrong with linear scaling (dividing by greatest value) here?
+                    double abc = absmac(out); // get max value for scaling
+                    if (abc > 1){
+                        for (int i = 0; i<out.length; i++){ // normalize based on greatest value
+                            out[i] /= abs(abc);
+                        }
+                    }
+
+                    driveVector(out);
+
+                    // update vals
+                    updateEncoders();
+                    dx = motorFrontLeft.getCurrentPosition(); // should use the encoders.center, but not rly working rn
+                    dy = ( - motorBackRight.getCurrentPosition() + motorBackLeft.getCurrentPosition()) / 2f;
+
+                    tele.addData("encr", motorBackLeft.getCurrentPosition());
+                    tele.addData("encl", -motorBackRight.getCurrentPosition());
+                    tele.addData("encc", motorFrontLeft.getCurrentPosition());
+
+                    tele.update();
                 }
                 catch (Exception e){
                     e.printStackTrace();

@@ -31,6 +31,7 @@ public class PID {
 
     boolean correctJitter = false;
     double[] pastJitter = {0, 0, 0, 0, 0};
+    boolean distanceSensor = false;
 
     // time break
     // rotation shit
@@ -53,7 +54,19 @@ public class PID {
         kp = p;
         this.correctJitter = correctJitter;
     }
+    public PID(double p, double i, double d, boolean correctJitter, boolean distanceSensor){
+        this.distanceSensor = distanceSensor;
+        ki = i;
+        kd = d;
+        kp = p;
+        this.correctJitter = correctJitter;
+    }
 
+    public void setConsts(double p, double i, double d) {
+        kp = p;
+        kd = d;
+        ki = i;
+    }
     public void init(double data){
         lastError = target - data;
         et.reset();
@@ -71,7 +84,7 @@ public class PID {
     }
     public double tick(double data){
         if (paused) return 0;
-        if (data > 800) return 0;
+        if (data > 800 && distanceSensor) return 0;
         currentMeasurement = data;
         double timeNow = et.milliseconds();
         sinceLastMeasurement = timeNow - sinceStart;

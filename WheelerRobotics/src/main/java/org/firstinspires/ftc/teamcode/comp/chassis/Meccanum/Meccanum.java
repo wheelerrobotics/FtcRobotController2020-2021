@@ -28,15 +28,15 @@ import org.firstinspires.ftc.teamcode.comp.helpers.PID;
 
 public class Meccanum implements Chassis {
 
-    double[] left = {
+    protected double[] left = {
             1,  -1,
             -1,  1
     };
-    double[] back = {
+    protected double[] back = {
             -1, -1,
             -1, -1
     };
-    double[] clock = {
+    protected double[] clock = {
             -1,  1,
             -1,  1
     };
@@ -246,6 +246,8 @@ public class Meccanum implements Chassis {
 
     }
 
+
+
     /**
      * Runs pid and updates the motors to keep the robot some distance/rotation from walls and stuff.
      * @param ri th rotation heading to try to maintain.
@@ -360,7 +362,7 @@ public class Meccanum implements Chassis {
      * Takes a 1x4 array representing wheel speeds from -1 to 1 and runs the motors at those powers.
      * @param arr 1x4 array which serves as a grid for the motor wheels.
      */
-    void driveVector(double[] arr){
+    protected void driveVector(double[] arr){
         motorFrontLeft.setPower(arr[0]);
         motorFrontRight.setPower(arr[1]);
         motorBackLeft.setPower(arr[2]);
@@ -371,7 +373,7 @@ public class Meccanum implements Chassis {
      * @param arr the array to act upon.
      * @return The absolute maximum of the array.
      */
-    double absmac(double[] arr){
+    protected double absmac(double[] arr){
 
         int outi = 0; // index of max
         for (int i = 0; i<arr.length; i++){
