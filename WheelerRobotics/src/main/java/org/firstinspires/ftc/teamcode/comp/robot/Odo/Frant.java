@@ -10,7 +10,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -18,7 +17,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
-import org.firstinspires.ftc.teamcode.comp.helpers.AprilDet;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 import org.firstinspires.ftc.teamcode.comp.utility.Encoders;
@@ -30,19 +28,23 @@ import org.openftc.apriltag.AprilTagDetection;
 import java.util.ArrayList;
 
 @Config
-public class Odo extends Meccanum implements Robot {
-    protected Servo servo = null;
+public class Frant extends Meccanum implements Robot {
     protected Telemetry tele = tele = FtcDashboard.getInstance().getTelemetry();
     protected HardwareMap hw = null;
-    public static double xp = 0.0001;
+    public static double OPEN_POSITION = 0.3;
+    public static double CLOSED_POSITION = 0;
+    public static double xp = 0.00005;
     public static double xd = 0.0004;
-    public static double yp = 0.0001;
+    public static double yp = 0.00005;
     public static double yd = 0.0004;
     public static double rp = 0.000;
     public static double rd = 0.000;
     public static double dthresh = 0.001;
+    public double scaleFactor = 0.6;
 
     public double stalPower = 0.08;
+    protected Servo claw = null;
+    protected DcMotor arm = null;
 
     double xTarget = 0;
     double yTarget = 0;
@@ -51,7 +53,7 @@ public class Odo extends Meccanum implements Robot {
     public boolean opModeIsActive = true;
     public boolean pidActive = false;
 
-    AprilDet at = new AprilDet();
+    AprilThread at = new AprilThread();
     PIDThread pt = new PIDThread();
 
     @Override
@@ -68,12 +70,6 @@ public class Odo extends Meccanum implements Robot {
         imu.initialize(parameters);
         // angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
-        //distace sensors (unused for now)
-
-        distanceBack = hardwareMap.get(DistanceSensor.class, "distanceBack");
-        distanceRight = hardwareMap.get(DistanceSensor.class, "distanceRight");
-        distanceLeft = hardwareMap.get(DistanceSensor.class, "distanceLeft");
-        distanceFront = hardwareMap.get(DistanceSensor.class, "distanceFront");
 
         // Meccanum Motors Definition and setting prefs
 
@@ -89,20 +85,27 @@ public class Odo extends Meccanum implements Robot {
         motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+
         // define arm and servo objects and also spinner
-        servo = hardwareMap.get(Servo.class, "servo");
+        claw = hardwareMap.get(Servo.class, "claw");
+        arm = hardwareMap.dcMotor.get("arm");
+        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //set prefs for arm and servo
-        servo.setDirection(Servo.Direction.FORWARD);
+        claw.setDirection(Servo.Direction.FORWARD);
+
 
         // define hw as the hardware map for possible access later in this class
         hw = hardwareMap;
 
-        pt.start();
-
-        at.init(hardwareMap);
 
         runtime.reset();
+    }
+    public void autoinit() {
+            pt.start();
+            pt.encoders = new Encoders(0, 0, 0);
+
+            at.start();
     }
 
     /*
@@ -117,12 +120,15 @@ public class Odo extends Meccanum implements Robot {
     public Pose getPose() {
         return pt.pose;
     }
-    public void alignCamera(){
-        servo.setPosition(0.5);
+    public void setClaw(boolean open) {
+        claw.setPosition(open ? OPEN_POSITION : CLOSED_POSITION);
     }
 
     public int getPrincipalTag(){
         return at.getDetected();
+    }
+    public void armDrive(double power) {
+        arm.setPower(power);
     }
 
     public void pidDrive(double x, double y, double r) {
@@ -154,7 +160,7 @@ public class Odo extends Meccanum implements Robot {
     - Would be sick if we actually use tensorflow models. Could be useful for object detection of the junctions.
 
      */
-    private class AprilThread extends Thread {
+    private class AprilThread {// extends Thread {
 
         public ArrayList<AprilTagDetection> detections = new ArrayList<>();
         public BotVision bv = new BotVision();
@@ -166,14 +172,7 @@ public class Odo extends Meccanum implements Robot {
         final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 2.0f;
         final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 7;
 
-        public AprilThread()
-        {
-            this.setName("AprilThread");
-
-
-        }
-        @Override
-        public void run() {
+        public void start() {
             bv.init(hw, atdp);
 
 
@@ -231,12 +230,9 @@ public class Odo extends Meccanum implements Robot {
                 -1,  1
         };
         Pose pose = new Pose(0, 0, 0);
-        Pose roboTargetVectors = new Pose(0, 0, 0);
-        Pose fieldTargetVectors = new Pose(0, 0, 0);
-        Pose fieldTargetPose = new Pose(0, 0, 0);
         public PIDThread() {
             this.setName("PoseThread");
-
+            pose = new Pose(0, 0, 0);
 
         }
 
@@ -277,47 +273,34 @@ public class Odo extends Meccanum implements Robot {
                     //  maintain an absolute positioning system (field centric)
                     double xScaler = (220787f / 240f);
                     double yScaler = (220787f / 240f);
-                    double rScaler = (130538f / (6 * PI)) * (180/PI) * (2*PI / -43459);
-                    fieldTargetPose.x = xTarget * xScaler; // in (experimentally obtained)
-                    fieldTargetPose.y = yTarget * yScaler; // in
-                    fieldTargetPose.r = rTarget * rScaler; // radians
+                    double rScaler = (130538f / (6 * PI)) * (180/PI);
+                    double x = xTarget * xScaler; // in (experimentally obtained)
+                    double y = yTarget * yScaler; // in
+                    double r = rTarget * rScaler; // radians
 
                     px.setConsts(xp, 0, xd);
                     py.setConsts(yp, 0, yd);
                     pr.setConsts(rp, 0, rd);
-
-                    px.setTarget(fieldTargetPose.x);
-                    py.setTarget(fieldTargetPose.y);
-                    pr.setTarget(fieldTargetPose.r);
+                    px.setTarget(x);
+                    py.setTarget(y);
+                    pr.setTarget(r);
 
                     tele.addData("sx", px.getDerivative());
                     tele.addData("sy", py.getDerivative());
                     tele.addData("sr", pr.getDerivative());
-
-
 
                     double[] out = {0, 0, 0, 0};
                     double ex = px.tick(pose.x);
                     double ey = py.tick(pose.y);
                     double er = pr.tick(pose.r);
 
-                    fieldTargetVectors.x = ex;
-                    fieldTargetVectors.y = ey;
-                    fieldTargetVectors.r = er;
-
-                    roboTargetVectors = fieldTargetVectors.getPoseRobotCentric();
-
-
 
                     tele.addData("ex", ex);
                     tele.addData("ey", ey);
                     tele.addData("er", er);
-                    tele.addData("rex", roboTargetVectors.x);
-                    tele.addData("rey", roboTargetVectors.y);
-                    tele.addData("rer", roboTargetVectors.r);
 
                     for (int i = 0; i<out.length; i++) { // add the individual vectors
-                        out[i] = -roboTargetVectors.x * this.left[i] + roboTargetVectors.y * this.back[i] + roboTargetVectors.r * this.clock[i];
+                        out[i] = ex * this.left[i] + ey * this.back[i] + er * -this.clock[i];
                     }
 
                     // TODO: is there anything wrong with linear scaling (dividing by greatest value) here?
@@ -328,6 +311,8 @@ public class Odo extends Meccanum implements Robot {
                         }
                     }
 
+
+                    for (int i = 0; i<out.length; i++) out[i] *= scaleFactor;
                     for (int i = 0; i<out.length; i++) if (abs(out[i]) < stalPower) out[i] = 0;
 
                     driveVector(out);
@@ -350,7 +335,7 @@ public class Odo extends Meccanum implements Robot {
                      */
                     center = -motorFrontLeft.getCurrentPosition();
                     left = motorBackLeft.getCurrentPosition();
-                    right = motorBackRight.getCurrentPosition();
+                    right = -motorBackRight.getCurrentPosition();
                     db = (center) - lastCenter;
                     da = right - lastRight;
                     dc = left - lastLeft;

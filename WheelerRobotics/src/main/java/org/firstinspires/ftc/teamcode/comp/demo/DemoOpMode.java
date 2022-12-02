@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 
 @TeleOp
+@Disabled
 public class DemoOpMode extends LinearOpMode {
 
     // declaring motors so they are able to be accessed in other functions

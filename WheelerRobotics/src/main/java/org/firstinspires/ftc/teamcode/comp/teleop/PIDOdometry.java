@@ -1,18 +1,13 @@
 package org.firstinspires.ftc.teamcode.comp.teleop;
 
-import static java.lang.Math.abs;
-
-import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.comp.helpers.PID;
 import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
 
 @TeleOp
+@Disabled
 public class PIDOdometry extends LinearOpMode {
 
     @Override

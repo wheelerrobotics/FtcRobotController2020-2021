@@ -1,13 +1,14 @@
 package org.firstinspires.ftc.teamcode.comp.teleop;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
-
 @TeleOp(name="Mateo's Financial Disaster")
+@Disabled
 public class AHEY extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.comp.teleop;
 
-import android.content.Context;
-
-import com.qualcomm.ftccommon.SoundPlayer;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -10,6 +8,7 @@ import org.firstinspires.ftc.teamcode.comp.controller.Odo.ControllerMapOdo;
 import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
 
 @TeleOp(name="Daniel's Wonderful Coding Adventure")
+@Disabled
 public class AHHHH extends LinearOpMode {
 
     @Override

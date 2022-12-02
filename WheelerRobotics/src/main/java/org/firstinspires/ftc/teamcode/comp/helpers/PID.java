@@ -1,20 +1,16 @@
 package org.firstinspires.ftc.teamcode.comp.helpers;
 
-import android.os.Build;
+import static java.lang.Math.abs;
 
-import androidx.annotation.RequiresApi;
-
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import java.util.Arrays;
-import java.util.HashMap;
-
 @Config
 public class PID {
+    public static double dThresh = 0.01;
+    public static double eThresh = 300;
     double integral = 0;
-    double derivative = 1;
+    double derivative = 0;
     double proportion = 0;
     double lastError = 0;
     double currentMeasurement = 0;
@@ -98,8 +94,8 @@ public class PID {
 
         error = target - currentMeasurement;
         integral += sinceLastMeasurement * error;
-        FtcDashboard.getInstance().getTelemetry().addData("i", integral);
-        FtcDashboard.getInstance().getTelemetry().addData("e", error);
+        // FtcDashboard.getInstance().getTelemetry().addData("i", integral);
+        // FtcDashboard.getInstance().getTelemetry().addData("e", error);
         derivative = ((correctJitter ? pastJitterAvg : lastError) - error)/sinceLastMeasurement;
 
         lastError = error;
@@ -110,6 +106,9 @@ public class PID {
     public void setPauseState(boolean p){
         paused = p;
         if(!p) et.reset();
+    }
+    public int isDone() {
+        return (abs(derivative) < dThresh) ? 1:0;
     }
 
 }

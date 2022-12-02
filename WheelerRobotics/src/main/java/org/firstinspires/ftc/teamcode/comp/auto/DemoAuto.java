@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.comp.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @Autonomous
+@Disabled
 public class DemoAuto extends LinearOpMode {
 
     public DcMotor motorFrontLeft = null;

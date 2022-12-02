@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.comp.utility;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.config.ValueProvider;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -10,13 +9,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 import org.firstinspires.ftc.teamcode.comp.vision.pipelines.AprilTagDetectionPipeline;
-import org.firstinspires.ftc.teamcode.comp.vision.pipelines.ColorIsolationPipeline;
-import org.firstinspires.ftc.teamcode.comp.vision.pipelines.DummyCVPipeline;
 import org.openftc.apriltag.AprilTagDetection;
 
 import java.util.ArrayList;
 
 @TeleOp
+@Disabled
 public class cameraTest extends LinearOpMode {
 
     /*
@@ -51,7 +49,7 @@ public class cameraTest extends LinearOpMode {
     int numFramesWithoutDetection = 0;
     Telemetry tele = FtcDashboard.getInstance().getTelemetry();
     final float DECIMATION_HIGH = 3;
-    final float DECIMATION_LOW = 2;
+    final float DECIMATION_LOW = 0.3f;
     final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 1.0f;
     final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 4;
 
