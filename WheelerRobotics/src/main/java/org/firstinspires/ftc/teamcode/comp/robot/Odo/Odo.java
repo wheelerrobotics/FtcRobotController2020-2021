@@ -38,8 +38,8 @@ public class Odo extends Meccanum implements Robot {
     public static double xd = 0.0004;
     public static double yp = 0.0001;
     public static double yd = 0.0004;
-    public static double rp = 0.000;
-    public static double rd = 0.000;
+    public static double rp = 0.0001;
+    public static double rd = 0.0004;
     public static double dthresh = 0.001;
 
     public double stalPower = 0.08;
@@ -231,9 +231,6 @@ public class Odo extends Meccanum implements Robot {
                 -1,  1
         };
         Pose pose = new Pose(0, 0, 0);
-        Pose roboTargetVectors = new Pose(0, 0, 0);
-        Pose fieldTargetVectors = new Pose(0, 0, 0);
-        Pose fieldTargetPose = new Pose(0, 0, 0);
         public PIDThread() {
             this.setName("PoseThread");
 
@@ -277,47 +274,34 @@ public class Odo extends Meccanum implements Robot {
                     //  maintain an absolute positioning system (field centric)
                     double xScaler = (220787f / 240f);
                     double yScaler = (220787f / 240f);
-                    double rScaler = (130538f / (6 * PI)) * (180/PI) * (2*PI / -43459);
-                    fieldTargetPose.x = xTarget * xScaler; // in (experimentally obtained)
-                    fieldTargetPose.y = yTarget * yScaler; // in
-                    fieldTargetPose.r = rTarget * rScaler; // radians
+                    double rScaler = (130538f / (6 * PI)) * (180/PI);
+                    double x = xTarget * xScaler; // in (experimentally obtained)
+                    double y = yTarget * yScaler; // in
+                    double r = rTarget * rScaler; // radians
 
                     px.setConsts(xp, 0, xd);
                     py.setConsts(yp, 0, yd);
                     pr.setConsts(rp, 0, rd);
-
-                    px.setTarget(fieldTargetPose.x);
-                    py.setTarget(fieldTargetPose.y);
-                    pr.setTarget(fieldTargetPose.r);
+                    px.setTarget(x);
+                    py.setTarget(y);
+                    pr.setTarget(r);
 
                     tele.addData("sx", px.getDerivative());
                     tele.addData("sy", py.getDerivative());
                     tele.addData("sr", pr.getDerivative());
-
-
 
                     double[] out = {0, 0, 0, 0};
                     double ex = px.tick(pose.x);
                     double ey = py.tick(pose.y);
                     double er = pr.tick(pose.r);
 
-                    fieldTargetVectors.x = ex;
-                    fieldTargetVectors.y = ey;
-                    fieldTargetVectors.r = er;
-
-                    roboTargetVectors = fieldTargetVectors.getPoseRobotCentric();
-
-
 
                     tele.addData("ex", ex);
                     tele.addData("ey", ey);
                     tele.addData("er", er);
-                    tele.addData("rex", roboTargetVectors.x);
-                    tele.addData("rey", roboTargetVectors.y);
-                    tele.addData("rer", roboTargetVectors.r);
 
                     for (int i = 0; i<out.length; i++) { // add the individual vectors
-                        out[i] = -roboTargetVectors.x * this.left[i] + roboTargetVectors.y * this.back[i] + roboTargetVectors.r * this.clock[i];
+                        out[i] = ex * this.left[i] + ey * this.back[i] + er * this.clock[i];
                     }
 
                     // TODO: is there anything wrong with linear scaling (dividing by greatest value) here?
