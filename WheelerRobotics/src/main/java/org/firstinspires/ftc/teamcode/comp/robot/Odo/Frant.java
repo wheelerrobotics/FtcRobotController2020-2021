@@ -10,11 +10,13 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
@@ -44,6 +46,7 @@ public class Frant extends Meccanum implements Robot {
 
     public double stalPower = 0.08;
     protected Servo claw = null;
+    protected DistanceSensor armHeight = null;
     protected DcMotor arm = null;
 
     double xTarget = 0;
@@ -85,6 +88,8 @@ public class Frant extends Meccanum implements Robot {
         motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+
+        armHeight = hardwareMap.get(DistanceSensor.class, "armSensor");
 
         // define arm and servo objects and also spinner
         claw = hardwareMap.get(Servo.class, "claw");
@@ -128,7 +133,13 @@ public class Frant extends Meccanum implements Robot {
         return at.getDetected();
     }
     public void armDrive(double power) {
-        arm.setPower(power);
+
+        if (armHeight.getDistance(DistanceUnit.CM) < 5 && power < 0) { // might be < instead of >
+            arm.setPower(0);
+        } else {
+            arm.setPower(power);
+        }
+
     }
 
     public void pidDrive(double x, double y, double r) {
