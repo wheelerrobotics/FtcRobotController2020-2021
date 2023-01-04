@@ -46,6 +46,7 @@ public class RedNoTerminal extends LinearOpMode {
                 bot.pidDrive(((conePosition == 1) ? 50 : ((conePosition == 2) ? 0 : -45)), 53, 0);
             }
 
+            if (currentMovementID == 4) break;
 
             if (bot.isDone()[0] == 1 && bot.isDone()[1] == 1 && bot.isDone()[2] == 1 && cooldown.milliseconds() > 500){
                 currentMovementID++;

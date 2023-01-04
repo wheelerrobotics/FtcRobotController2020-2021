@@ -2,19 +2,24 @@ package org.firstinspires.ftc.teamcode.comp.robot.Odo;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 import android.content.Context;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
@@ -35,15 +40,16 @@ public class Frant extends Meccanum implements Robot {
     public static double CLOSED_POSITION = 0;
     public static double xp = 0.00005;
     public static double xd = 0.0004;
-    public static double yp = 0.00005;
-    public static double yd = 0.0004;
-    public static double rp = 0.000;
-    public static double rd = 0.000;
+    public static double yp = 0.00005; // 0.00005
+    public static double yd = 0.0004; // 0.0004
+    public static double rp = 0.00005;
+    public static double rd = 0.0004;
     public static double dthresh = 0.001;
     public double scaleFactor = 0.6;
 
     public double stalPower = 0.08;
     protected Servo claw = null;
+    protected DistanceSensor armHeight = null;
     protected DcMotor arm = null;
 
     double xTarget = 0;
@@ -86,6 +92,8 @@ public class Frant extends Meccanum implements Robot {
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
+        armHeight = hardwareMap.get(DistanceSensor.class, "armSensor");
+
         // define arm and servo objects and also spinner
         claw = hardwareMap.get(Servo.class, "claw");
         arm = hardwareMap.dcMotor.get("arm");
@@ -105,7 +113,7 @@ public class Frant extends Meccanum implements Robot {
             pt.start();
             pt.encoders = new Encoders(0, 0, 0);
 
-            at.start();
+            //at.start();
     }
 
     /*
@@ -123,12 +131,19 @@ public class Frant extends Meccanum implements Robot {
     public void setClaw(boolean open) {
         claw.setPosition(open ? OPEN_POSITION : CLOSED_POSITION);
     }
+    public void setClawPos(double openness) {
+        claw.setPosition(openness);
+    }
 
     public int getPrincipalTag(){
         return at.getDetected();
     }
     public void armDrive(double power) {
-        arm.setPower(power);
+        if (armHeight.getDistance(DistanceUnit.CM) < 5 && power < 0) { // might be < instead of >
+            arm.setPower(0);
+        } else {
+            arm.setPower(power);
+        }
     }
 
     public void pidDrive(double x, double y, double r) {
@@ -230,9 +245,12 @@ public class Frant extends Meccanum implements Robot {
                 -1,  1
         };
         Pose pose = new Pose(0, 0, 0);
+        Pose roboTargetVectors = new Pose(0, 0, 0);
+        Pose fieldTargetVectors = new Pose(0, 0, 0);
+        Pose fieldTargetPose = new Pose(0, 0, 0);
         public PIDThread() {
             this.setName("PoseThread");
-            pose = new Pose(0, 0, 0);
+
 
         }
 
@@ -242,7 +260,7 @@ public class Frant extends Meccanum implements Robot {
         public void run() {
             // we record the Y values in the main class to make showing them in telemetry
             // easier.
-
+            FtcDashboard dashboard = FtcDashboard.getInstance();
             Telemetry tele = FtcDashboard.getInstance().getTelemetry();
             double dx = 0;
             double dy = 0;
@@ -271,36 +289,54 @@ public class Frant extends Meccanum implements Robot {
                     // TODO: add dimension for rotation, will involve calculating x/y with rotation
                     //  in mind thus a combination of current x/y encoder readings. We want to
                     //  maintain an absolute positioning system (field centric)
-                    double xScaler = (220787f / 240f);
-                    double yScaler = (220787f / 240f);
-                    double rScaler = (130538f / (6 * PI)) * (180/PI);
-                    double x = xTarget * xScaler; // in (experimentally obtained)
-                    double y = yTarget * yScaler; // in
-                    double r = rTarget * rScaler; // radians
+                    double xScaler = (240f / 220787f);
+                    double yScaler = (240f / 220787f);
+                    fieldTargetPose.x = xTarget; // in (experimentally obtained)
+                    fieldTargetPose.y = yTarget; // in
+                    fieldTargetPose.r = rTarget; // radians
 
                     px.setConsts(xp, 0, xd);
                     py.setConsts(yp, 0, yd);
                     pr.setConsts(rp, 0, rd);
-                    px.setTarget(x);
-                    py.setTarget(y);
-                    pr.setTarget(r);
+
+                    px.setTarget(fieldTargetPose.x);
+                    py.setTarget(fieldTargetPose.y);
+                    pr.setTarget(fieldTargetPose.r);
 
                     tele.addData("sx", px.getDerivative());
                     tele.addData("sy", py.getDerivative());
                     tele.addData("sr", pr.getDerivative());
+
+
 
                     double[] out = {0, 0, 0, 0};
                     double ex = px.tick(pose.x);
                     double ey = py.tick(pose.y);
                     double er = pr.tick(pose.r);
 
+                    fieldTargetVectors.x = ex;
+                    fieldTargetVectors.y = ey;
+                    fieldTargetVectors.r = er;
+
+                    roboTargetVectors = fieldTargetVectors.getPoseRobotCentric();
+
+
 
                     tele.addData("ex", ex);
                     tele.addData("ey", ey);
                     tele.addData("er", er);
 
+                    TelemetryPacket packet = new TelemetryPacket();
+                    packet.fieldOverlay()
+                            .strokeCircle(pose.y, pose.x, 10).strokeLine(pose.y, pose.x, pose.y + 7*cos(pose.r), pose.x + 7*sin(pose.r));
+                    dashboard.sendTelemetryPacket(packet);
+
+                    tele.addData("rex", roboTargetVectors.x);
+                    tele.addData("rey", roboTargetVectors.y);
+                    tele.addData("rer", roboTargetVectors.r);
+
                     for (int i = 0; i<out.length; i++) { // add the individual vectors
-                        out[i] = ex * this.left[i] + ey * this.back[i] + er * -this.clock[i];
+                        out[i] = -roboTargetVectors.x * this.left[i] + roboTargetVectors.y * this.back[i] + roboTargetVectors.r * this.clock[i];
                     }
 
                     // TODO: is there anything wrong with linear scaling (dividing by greatest value) here?
@@ -311,8 +347,6 @@ public class Frant extends Meccanum implements Robot {
                         }
                     }
 
-
-                    for (int i = 0; i<out.length; i++) out[i] *= scaleFactor;
                     for (int i = 0; i<out.length; i++) if (abs(out[i]) < stalPower) out[i] = 0;
 
                     driveVector(out);
@@ -333,15 +367,41 @@ public class Frant extends Meccanum implements Robot {
                                 b
                           view from top
                      */
-                    center = -motorFrontLeft.getCurrentPosition();
-                    left = motorBackLeft.getCurrentPosition();
-                    right = -motorBackRight.getCurrentPosition();
+
+
+                    center = motorFrontLeft.getCurrentPosition();
+                    left = -motorBackLeft.getCurrentPosition();
+                    right = motorBackRight.getCurrentPosition();
+
                     db = (center) - lastCenter;
                     da = right - lastRight;
                     dc = left - lastLeft;
-                    dx = db - (da+dc) / 2;
-                    dy = (da-dc) / 2;
-                    dr = (da+dc) / 2;
+
+
+                    tele.addData("da", da);
+                    tele.addData("db", db);
+                    tele.addData("dc", dc);
+
+                    int TICKS_PER_ENCODER_ROTATION = 8142;
+
+                    double rightRotationScale = (35561 - 165480) / 3d; // 2pi per 35561 - 165480
+                    double leftRotationScale = (35992 - 121670) / 3d; // 35992 - 121670
+                    double centerRotationScale = (15433 - 101365) / 3d; // 15433 - 101365
+
+                    dr = -1 * ((da+dc)/((rightRotationScale + leftRotationScale) / 2)) * ((2*PI)/3.9451) / 2;
+                    da -= (dr * rightRotationScale / 2*PI);
+                    db -= (dr * centerRotationScale / 2*PI);
+                    dc -= (dr * leftRotationScale / 2*PI);
+
+
+                    tele.addData("dac", da);
+                    tele.addData("dbc", db);
+                    tele.addData("dcc", dc);
+
+                    pose.setPose(pose.x, pose.y, (dr * (2*PI) / (8.6 /PI)) + pose.r);
+                    dy = (((cos(pose.r) * da) - (cos(pose.r) * dc))/2 - (sin(pose.r) * db)) * (24/-31.676) * yScaler;
+                    dx = (((sin(pose.r) * da) - (sin(pose.r) * dc))/2 - (cos(pose.r) * db)) * (24/-15.574) * xScaler;
+
                     tele.addData("dr", dr);
                     tele.addData("dx", dx);
                     tele.addData("dy", dy);
@@ -359,9 +419,9 @@ public class Frant extends Meccanum implements Robot {
                     tele.addData("yd", py.isDone());
 
 
-                    tele.addData("encr", motorBackLeft.getCurrentPosition());
-                    tele.addData("encl", motorBackRight.getCurrentPosition());
-                    tele.addData("encc", -motorFrontLeft.getCurrentPosition());
+                    tele.addData("encr", right);
+                    tele.addData("encl", left);
+                    tele.addData("encc", center);
                     tele.update();
                 }
                 catch (Exception e){
@@ -369,6 +429,19 @@ public class Frant extends Meccanum implements Robot {
                 }
 
             }
+        }
+        public double calculate(double displaced_angle, double displaced_distance, double wheel_radius, double ticks_per_revolution, double rotation, double ticks){
+
+            displaced_angle = displaced_angle + Math.PI/2;
+
+            double rel_tang_angle = abs((displaced_angle % (PI/2)) - rotation ); // rads away from being tangent
+            double vel = abs(rel_tang_angle / cos(displaced_angle + rotation)); // correction factor to make # ticks same as if tangent
+            double norm_ticks = (vel * ticks); // ticks as if tangent
+
+            double ticks_to_cm =  (wheel_radius * 2*PI) / ticks_per_revolution;  // convert between cm and ticks
+            double dangle = norm_ticks * ticks_to_cm / (displaced_distance * 2*PI); // convert ticks to angle
+
+            return dangle;
         }
         public Encoders getEncoders(){
             updateEncoders();
