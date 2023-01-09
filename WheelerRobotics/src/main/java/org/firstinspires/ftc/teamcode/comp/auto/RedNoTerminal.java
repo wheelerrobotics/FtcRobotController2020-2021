@@ -31,21 +31,16 @@ public class RedNoTerminal extends LinearOpMode {
         while (opModeIsActive() && conePosition == 0 && cooldown.milliseconds() < 3000) conePosition = bot.getPrincipalTag();
         while (opModeIsActive()) {
             bot.pidActive = true;
-            cooldown.reset();
 
 
             if (currentMovementID == 0) {
-                bot.pidDrive(-45, 0, 0);}
+                bot.pidDrive(0, 52, 0);}
 
             if (currentMovementID == 1) {
-                bot.pidDrive(5, 0, 0);}
-            if (currentMovementID == 2) {
-                bot.pidDrive(5, 50, 0);}
-
-            if (currentMovementID == 3) {
                 bot.pidDrive(((conePosition == 1) ? 50 : ((conePosition == 2) ? 0 : -45)), 53, 0);
             }
 
+            if (currentMovementID == 2) break;
 
             if (bot.isDone()[0] == 1 && bot.isDone()[1] == 1 && bot.isDone()[2] == 1 && cooldown.milliseconds() > 500){
                 currentMovementID++;
@@ -56,6 +51,7 @@ public class RedNoTerminal extends LinearOpMode {
 
 
         }
+        bot.pidActive = false;
         bot.opModeIsActive = false;
 
 

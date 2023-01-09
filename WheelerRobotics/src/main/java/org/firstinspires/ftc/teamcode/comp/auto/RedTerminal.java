@@ -57,6 +57,7 @@ public class RedTerminal extends LinearOpMode {
 
 
         }
+        bot.pidActive = false;
         bot.opModeIsActive = false;
 
 

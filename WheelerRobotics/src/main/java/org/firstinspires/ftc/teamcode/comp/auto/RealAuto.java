@@ -46,6 +46,8 @@ public class RealAuto extends LinearOpMode {
             }
 
 
+            if (currentMovementID == 3) break;
+
             if (bot.isDone()[0] == 1 && bot.isDone()[1] == 1 && bot.isDone()[2] == 1 && cooldown.milliseconds() > 500){
                 currentMovementID++;
                 cooldown.reset();
@@ -55,6 +57,7 @@ public class RealAuto extends LinearOpMode {
 
 
         }
+        bot.pidActive = false;
         bot.opModeIsActive = false;
 
 

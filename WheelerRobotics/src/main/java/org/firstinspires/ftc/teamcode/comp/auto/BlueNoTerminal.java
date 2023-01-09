@@ -34,16 +34,9 @@ public class BlueNoTerminal extends LinearOpMode {
 
 
             if (currentMovementID == 0) {
-                bot.pidDrive(45, 0, 0);}
-
+                bot.pidDrive(0, 52, 0);}
 
             if (currentMovementID == 1) {
-                bot.pidDrive(-5, 0, 0);}
-
-            if (currentMovementID == 2) {
-                bot.pidDrive(-5, 50, 0);}
-
-            if (currentMovementID == 3) {
                 bot.pidDrive(((conePosition == 1) ? 50 : ((conePosition == 2) ? 0 : -50)), 53, 0);
             }
 
@@ -58,6 +51,7 @@ public class BlueNoTerminal extends LinearOpMode {
 
 
         }
+        bot.pidActive = false;
         bot.opModeIsActive = false;
 
 
