@@ -16,7 +16,7 @@ public class FakeAuto extends LinearOpMode {
     public static double r = 0;
     Frant bot = new Frant();
     Telemetry tele = FtcDashboard.getInstance().getTelemetry();
-    @Override
+
     public void runOpMode() {
         bot.init(hardwareMap);
         bot.autoinit();
@@ -26,8 +26,12 @@ public class FakeAuto extends LinearOpMode {
         while (opModeIsActive()) {
             bot.pidActive = true;
             bot.pidDrive(x, y, r);
+            if(isStopRequested()){
+                bot.opModeIsActive = false;
+            }
         }
         bot.opModeIsActive = false;
+        bot.pidActive = false;
 
 
     }

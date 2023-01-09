@@ -390,7 +390,7 @@ public class Frant extends Meccanum implements Robot {
 
                     dr = -1 * ((da+dc)/((rightRotationScale + leftRotationScale) / 2)) * ((2*PI)/3.9451) / 2;
                     da -= (dr * rightRotationScale / 2*PI);
-                    db -= (dr * centerRotationScale / 2*PI);
+                    db += (dr * centerRotationScale / 2*PI);
                     dc -= (dr * leftRotationScale / 2*PI);
 
 
@@ -400,7 +400,7 @@ public class Frant extends Meccanum implements Robot {
 
                     pose.setPose(pose.x, pose.y, (dr * (2*PI) / (8.6 /PI)) + pose.r);
                     dy = (((cos(pose.r) * da) - (cos(pose.r) * dc))/2 - (sin(pose.r) * db)) * (24/-31.676) * yScaler;
-                    dx = (((sin(pose.r) * da) - (sin(pose.r) * dc))/2 - (cos(pose.r) * db)) * (24/-15.574) * xScaler;
+                    dx = (-((sin(pose.r) * da) - (sin(pose.r) * dc))/2 - (cos(pose.r) * db)) * (24/-15.574) * xScaler;
 
                     tele.addData("dr", dr);
                     tele.addData("dx", dx);
