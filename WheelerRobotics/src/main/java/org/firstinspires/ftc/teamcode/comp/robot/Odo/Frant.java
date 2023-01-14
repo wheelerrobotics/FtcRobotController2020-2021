@@ -118,7 +118,7 @@ public class Frant extends Meccanum implements Robot {
 
             pt.encoders = new Encoders(0, 0, 0);
             pt.pose = new Pose(0, 0, 0);
-            pt.start();
+            pt.init();
 
             at.start();
     }
@@ -295,6 +295,7 @@ public class Frant extends Meccanum implements Robot {
 
 
         public volatile Encoders encoders = null;
+        Telemetry tele = FtcDashboard.getInstance().getTelemetry();
         public volatile Pose pose = null;
         private volatile PID py, px, pr = null;
         public volatile boolean opModeIsActive = true;
@@ -323,21 +324,19 @@ public class Frant extends Meccanum implements Robot {
         volatile double lastCenter;
         volatile double lastLeft;
         volatile double lastRight;
-        // called when tread.start is called. thread stays in loop to do what it does until exit is
-        // signaled by main code calling thread.interrupt.
-        public void end(boolean val) {
-            opModeIsActive = val;
-        }
-        @Override
-        public void run() {
-            // we record the Y values in the main class to make showing them in telemetry
-            // easier.
+        double dx = 0;
+        double dy = 0;
+        double dr = 0;
+        double deltaCenter = 0;
+        double deltaRight = 0;
+        double deltaLeft = 0;
+
+        public void init() {
             encoders = new Encoders(0, 0, 0);
             pose = new Pose(0, 0, 0);
-            Telemetry tele = FtcDashboard.getInstance().getTelemetry();
-            double dx = 0;
-            double dy = 0;
-            double dr = 0;
+            dx = 0;
+            dy = 0;
+            dr = 0;
             centere = -motorFrontLeft.getCurrentPosition();
             lefte = motorBackLeft.getCurrentPosition();
             righte = motorBackRight.getCurrentPosition();
@@ -351,70 +350,77 @@ public class Frant extends Meccanum implements Robot {
             px.init(pose.x);
             pr = new PID(rp, 0, rd, false); // -0.025, -0.00008, -0.2
             pr.init(pose.r);
-            double deltaCenter = 0;
-            double deltaRight = 0;
-            double deltaLeft = 0;
+            deltaCenter = 0;
+            deltaRight = 0;
+            deltaLeft = 0;
+
+        }
 
 
-            while (!isInterrupted() && opModeIsActive) {
-                if (isInterrupted()) return;
-                if (!pidActive) continue;
-                if (!opModeIsActive) return;
-                try {
-                    // TODO: add dimension for rotation, will involve calculating x/y with rotation
-                    //  in mind thus a combination of current x/y encoder readings. We want to
-                    //  maintain an absolute positioning system (field centric)
-                    if (et.milliseconds() < 1000) {
-                        pose.setPose(0, 0, 0);
+        // called when tread.start is called. thread stays in loop to do what it does until exit is
+        // signaled by main code calling thread.interrupt.
+        public void end(boolean val) {
+            opModeIsActive = val;
+        }
+        public void tick() {
+            if (isInterrupted()) return;
+            if (!pidActive) return;
+            if (!opModeIsActive) return;
+            try {
+                // TODO: add dimension for rotation, will involve calculating x/y with rotation
+                //  in mind thus a combination of current x/y encoder readings. We want to
+                //  maintain an absolute positioning system (field centric)
+                if (et.milliseconds() < 1000) {
+                    pose.setPose(0, 0, 0);
+                }
+                double xScaler = (220787f / 240f);
+                double yScaler = (220787f / 240f);
+                double rScaler = (130538f / (6 * PI)) * (180/PI);
+                double x = xTarget * xScaler; // in (experimentally obtained)
+                double y = yTarget * yScaler; // in
+                double r = rTarget * rScaler; // radians
+
+                px.setConsts(xp, 0, xd);
+                py.setConsts(yp, 0, yd);
+                pr.setConsts(rp, 0, rd);
+                px.setTarget(x);
+                py.setTarget(y);
+                pr.setTarget(r);
+
+                tele.addData("sx", px.getDerivative());
+                tele.addData("sy", py.getDerivative());
+                tele.addData("sr", pr.getDerivative());
+
+                double[] out = {0, 0, 0, 0};
+                double ex = px.tick(pose.x);
+                double ey = py.tick(pose.y);
+                double er = pr.tick(pose.r);
+
+
+                tele.addData("ex", ex);
+                tele.addData("ey", ey);
+                tele.addData("er", er);
+
+                for (int i = 0; i<out.length; i++) { // add the individual vectors
+                    out[i] = ex * this.left[i] + ey * this.back[i] + er * -this.clock[i];
+                }
+
+                // TODO: is there anything wrong with linear scaling (dividing by greatest value) here?
+                double abc = absmac(out); // get max value for scaling
+                if (abc > 1){
+                    for (int i = 0; i<out.length; i++){ // normalize based on greatest value
+                        out[i] /= abs(abc);
                     }
-                    double xScaler = (220787f / 240f);
-                    double yScaler = (220787f / 240f);
-                    double rScaler = (130538f / (6 * PI)) * (180/PI);
-                    double x = xTarget * xScaler; // in (experimentally obtained)
-                    double y = yTarget * yScaler; // in
-                    double r = rTarget * rScaler; // radians
-
-                    px.setConsts(xp, 0, xd);
-                    py.setConsts(yp, 0, yd);
-                    pr.setConsts(rp, 0, rd);
-                    px.setTarget(x);
-                    py.setTarget(y);
-                    pr.setTarget(r);
-
-                    tele.addData("sx", px.getDerivative());
-                    tele.addData("sy", py.getDerivative());
-                    tele.addData("sr", pr.getDerivative());
-
-                    double[] out = {0, 0, 0, 0};
-                    double ex = px.tick(pose.x);
-                    double ey = py.tick(pose.y);
-                    double er = pr.tick(pose.r);
+                }
 
 
-                    tele.addData("ex", ex);
-                    tele.addData("ey", ey);
-                    tele.addData("er", er);
+                for (int i = 0; i<out.length; i++) out[i] *= scaleFactor;
+                for (int i = 0; i<out.length; i++) if (abs(out[i]) < stalPower) out[i] = 0;
 
-                    for (int i = 0; i<out.length; i++) { // add the individual vectors
-                        out[i] = ex * this.left[i] + ey * this.back[i] + er * -this.clock[i];
-                    }
+                driveVector(out);
 
-                    // TODO: is there anything wrong with linear scaling (dividing by greatest value) here?
-                    double abc = absmac(out); // get max value for scaling
-                    if (abc > 1){
-                        for (int i = 0; i<out.length; i++){ // normalize based on greatest value
-                            out[i] /= abs(abc);
-                        }
-                    }
-
-
-                    for (int i = 0; i<out.length; i++) out[i] *= scaleFactor;
-                    for (int i = 0; i<out.length; i++) if (abs(out[i]) < stalPower) out[i] = 0;
-
-                    driveVector(out);
-
-                    // update vals
-                    updateEncoders();
+                // update vals
+                updateEncoders();
 
                     /*
                     encoders
@@ -430,45 +436,43 @@ public class Frant extends Meccanum implements Robot {
                           view from top
                      */
 
-                    centere = -motorFrontLeft.getCurrentPosition();
-                    lefte = motorBackLeft.getCurrentPosition();
-                    righte = -motorBackRight.getCurrentPosition();
+                centere = -motorFrontLeft.getCurrentPosition();
+                lefte = motorBackLeft.getCurrentPosition();
+                righte = -motorBackRight.getCurrentPosition();
 
 
-                    deltaCenter = (centere) - lastCenter;
-                    deltaRight = righte - lastRight;
-                    deltaLeft = lefte - lastLeft;
-                    dx = deltaCenter - (deltaRight+deltaLeft) / 2;
-                    dy = (deltaRight-deltaLeft) / 2;
-                    dr = (deltaRight+deltaLeft) / 2;
-                    tele.addData("dr", dr);
-                    tele.addData("dx", dx);
-                    tele.addData("dy", dy);
-                    lastCenter = centere;
-                    lastLeft = lefte;
-                    lastRight = righte;
-                    pose.setPose(dx + pose.x, dy + pose.y, dr + pose.r);
+                deltaCenter = (centere) - lastCenter;
+                deltaRight = righte - lastRight;
+                deltaLeft = lefte - lastLeft;
+                dx = deltaCenter - (deltaRight+deltaLeft) / 2;
+                dy = (deltaRight-deltaLeft) / 2;
+                dr = (deltaRight+deltaLeft) / 2;
+                tele.addData("dr", dr);
+                tele.addData("dx", dx);
+                tele.addData("dy", dy);
+                lastCenter = centere;
+                lastLeft = lefte;
+                lastRight = righte;
+                pose.setPose(dx + pose.x, dy + pose.y, dr + pose.r);
 
-                    tele.addData("pr", pose.r);
-                    tele.addData("px", pose.x);
-                    tele.addData("py", pose.y);
+                tele.addData("pr", pose.r);
+                tele.addData("px", pose.x);
+                tele.addData("py", pose.y);
 
-                    tele.addData("rd", pr.isDone());
-                    tele.addData("xd", px.isDone());
-                    tele.addData("yd", py.isDone());
+                tele.addData("rd", pr.isDone());
+                tele.addData("xd", px.isDone());
+                tele.addData("yd", py.isDone());
 
 
-                    tele.addData("encr", motorBackLeft.getCurrentPosition());
-                    tele.addData("encl", motorBackRight.getCurrentPosition());
-                    tele.addData("encc", -motorFrontLeft.getCurrentPosition());
-                    tele.update();
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
+                tele.addData("encr", motorBackLeft.getCurrentPosition());
+                tele.addData("encl", motorBackRight.getCurrentPosition());
+                tele.addData("encc", -motorFrontLeft.getCurrentPosition());
+                tele.update();
+        }
+            catch (Exception e) {
+                tele.addData("error", e.getMessage());
+                tele.update();
             }
-            tele.addData("on", opModeIsActive);
-            tele.update();
         }
         public Encoders getEncoders(){
             updateEncoders();
