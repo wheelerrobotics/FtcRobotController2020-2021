@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.comp.robot.Odo;
 
-import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -13,6 +12,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -79,10 +79,10 @@ public class Frant extends Meccanum implements Robot {
 
         // Meccanum Motors Definition and setting prefs
 
-        motorFrontLeft = hardwareMap.dcMotor.get("motorFrontLeft");
-        motorBackLeft = hardwareMap.dcMotor.get("motorBackLeft");
-        motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
-        motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
+        motorFrontLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontLeft");
+        motorBackLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorBackLeft");
+        motorFrontRight = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontRight");
+        motorBackRight = (DcMotorEx) hardwareMap.dcMotor.get("motorBackRight");
 
         // Reverse the left side motors and set behaviors to stop instead of coast
 
@@ -110,7 +110,6 @@ public class Frant extends Meccanum implements Robot {
         runtime.reset();
     }
     public void autoinit() {
-            pt.start();
             pt.encoders = new Encoders(0, 0, 0);
 
             //at.start();
@@ -226,7 +225,10 @@ public class Frant extends Meccanum implements Robot {
         }
     }
 
-    private class PIDThread extends Thread
+    public void tickPID() {
+        pt.tick();
+    }
+    private class PIDThread
     {
 
         private Encoders encoders = new Encoders(0, 0, 0);
@@ -249,15 +251,12 @@ public class Frant extends Meccanum implements Robot {
         Pose fieldTargetVectors = new Pose(0, 0, 0);
         Pose fieldTargetPose = new Pose(0, 0, 0);
         public PIDThread() {
-            this.setName("PoseThread");
 
 
         }
-
         // called when tread.start is called. thread stays in loop to do what it does until exit is
         // signaled by main code calling thread.interrupt.
-        @Override
-        public void run() {
+        public void tick() {
             // we record the Y values in the main class to make showing them in telemetry
             // easier.
             FtcDashboard dashboard = FtcDashboard.getInstance();
@@ -278,12 +277,12 @@ public class Frant extends Meccanum implements Robot {
             px.init(pose.x);
             pr = new PID(rp, 0, rd, false); // -0.025, -0.00008, -0.2
             pr.init(pose.r);
-            double db = 0;
-            double da = 0;
-            double dc = 0;
+            double deltaCenter = 0;
+            double deltaRight = 0;
+            double deltaLeft = 0;
 
 
-            while (!isInterrupted() && opModeIsActive) {
+            while (opModeIsActive) {
                 if (!pidActive) continue;
                 try {
                     // TODO: add dimension for rotation, will involve calculating x/y with rotation
@@ -302,10 +301,6 @@ public class Frant extends Meccanum implements Robot {
                     px.setTarget(fieldTargetPose.x);
                     py.setTarget(fieldTargetPose.y);
                     pr.setTarget(fieldTargetPose.r);
-
-                    tele.addData("sx", px.getDerivative());
-                    tele.addData("sy", py.getDerivative());
-                    tele.addData("sr", pr.getDerivative());
 
 
 
@@ -369,59 +364,30 @@ public class Frant extends Meccanum implements Robot {
                      */
 
 
+
                     center = motorFrontLeft.getCurrentPosition();
                     left = -motorBackLeft.getCurrentPosition();
                     right = motorBackRight.getCurrentPosition();
 
-                    db = (center) - lastCenter;
-                    da = right - lastRight;
-                    dc = left - lastLeft;
+                    // new copied math :)
+                    deltaLeft = left - lastLeft;
+                    deltaRight = right - lastRight;
+                    deltaCenter = center - lastCenter;
+                    // odometry solution: GET MIRRORED ODOMETRY PODS (im so stupid :/)
+                    double phi = (deltaLeft - deltaRight) / trackwidth;
 
+                    double delta_middle_pos = (deltaLeft + deltaRight) / 2;
+                    double delta_perp_pos = deltaCenter - forward_offset * phi;
 
-                    tele.addData("da", da);
-                    tele.addData("db", db);
-                    tele.addData("dc", dc);
+                    double delta_x = delta_middle_pos * cos(pose.r) - delta_perp_pos * sin(pose.r);
+                    double delta_y = delta_middle_pos * sin(pose.r) + delta_perp_pos * cos(pose.r);
 
-                    int TICKS_PER_ENCODER_ROTATION = 8142;
+                    pose.setPose(pose.x + delta_x, pose.y + delta_y, pose.r + phi);
 
-                    double rightRotationScale = (35561 - 165480) / 3d; // 2pi per 35561 - 165480
-                    double leftRotationScale = (35992 - 121670) / 3d; // 35992 - 121670
-                    double centerRotationScale = (15433 - 101365) / 3d; // 15433 - 101365
-
-                    dr = -1 * ((da+dc)/((rightRotationScale + leftRotationScale) / 2)) * ((2*PI)/3.9451) / 2;
-                    da -= (dr * rightRotationScale / 2*PI);
-                    db += (dr * centerRotationScale / 2*PI);
-                    dc -= (dr * leftRotationScale / 2*PI);
-
-
-                    tele.addData("dac", da);
-                    tele.addData("dbc", db);
-                    tele.addData("dcc", dc);
-
-                    pose.setPose(pose.x, pose.y, (dr * (2*PI) / (8.6 /PI)) + pose.r);
-                    dy = (((cos(pose.r) * da) - (cos(pose.r) * dc))/2 - (sin(pose.r) * db)) * (24/-31.676) * yScaler;
-                    dx = (-((sin(pose.r) * da) - (sin(pose.r) * dc))/2 - (cos(pose.r) * db)) * (24/-15.574) * xScaler;
-
-                    tele.addData("dr", dr);
-                    tele.addData("dx", dx);
-                    tele.addData("dy", dy);
                     lastCenter = center;
                     lastLeft = left;
                     lastRight = right;
-                    pose.setPose(dx + pose.x, dy + pose.y, dr + pose.r);
 
-                    tele.addData("pr", pose.r);
-                    tele.addData("px", pose.x);
-                    tele.addData("py", pose.y);
-
-                    tele.addData("rd", pr.isDone());
-                    tele.addData("xd", px.isDone());
-                    tele.addData("yd", py.isDone());
-
-
-                    tele.addData("encr", right);
-                    tele.addData("encl", left);
-                    tele.addData("encc", center);
                     tele.update();
                 }
                 catch (Exception e){
@@ -429,19 +395,6 @@ public class Frant extends Meccanum implements Robot {
                 }
 
             }
-        }
-        public double calculate(double displaced_angle, double displaced_distance, double wheel_radius, double ticks_per_revolution, double rotation, double ticks){
-
-            displaced_angle = displaced_angle + Math.PI/2;
-
-            double rel_tang_angle = abs((displaced_angle % (PI/2)) - rotation ); // rads away from being tangent
-            double vel = abs(rel_tang_angle / cos(displaced_angle + rotation)); // correction factor to make # ticks same as if tangent
-            double norm_ticks = (vel * ticks); // ticks as if tangent
-
-            double ticks_to_cm =  (wheel_radius * 2*PI) / ticks_per_revolution;  // convert between cm and ticks
-            double dangle = norm_ticks * ticks_to_cm / (displaced_distance * 2*PI); // convert ticks to angle
-
-            return dangle;
         }
         public Encoders getEncoders(){
             updateEncoders();

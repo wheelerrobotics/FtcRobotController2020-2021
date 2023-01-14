@@ -2,13 +2,13 @@ package org.firstinspires.ftc.teamcode.comp.chassis.Meccanum;
 
 
 import static java.lang.Math.abs;
-import static java.lang.Math.min;
 import static java.lang.Math.pow;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -47,10 +47,10 @@ public class Meccanum implements Chassis {
     protected DistanceSensor distanceLeft = null;
     protected DistanceSensor distanceRight = null;
 
-    protected DcMotor motorFrontRight = null;
-    protected DcMotor motorBackRight = null;
-    protected DcMotor motorFrontLeft = null;
-    protected DcMotor motorBackLeft = null;
+    protected DcMotorEx motorFrontRight = null;
+    protected DcMotorEx motorBackRight = null;
+    protected DcMotorEx motorFrontLeft = null;
+    protected DcMotorEx motorBackLeft = null;
 
     HardwareMap hw = null;
     public void init(HardwareMap hardwareMap){
@@ -81,10 +81,10 @@ public class Meccanum implements Chassis {
 
         // Meccanum Motors Definition and setting prefs
 
-        motorFrontLeft = hardwareMap.dcMotor.get("motorFrontLeft");
-        motorBackLeft = hardwareMap.dcMotor.get("motorBackLeft");
-        motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
-        motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
+        motorFrontLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontLeft");
+        motorBackLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorBackLeft");
+        motorFrontRight = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontRight");
+        motorBackRight = (DcMotorEx) hardwareMap.dcMotor.get("motorBackRight");
 
         // Reverse the left side motors and set behaviors to stop instead of coast
         motorFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);

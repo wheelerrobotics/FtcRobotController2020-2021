@@ -54,6 +54,8 @@ public class RedNoTerminal extends LinearOpMode {
             }
 
 
+            bot.tickPID();
+
 
 
         }

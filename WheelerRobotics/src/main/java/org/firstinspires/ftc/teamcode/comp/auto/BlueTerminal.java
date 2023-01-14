@@ -55,6 +55,7 @@ public class BlueTerminal extends LinearOpMode {
             }
 
 
+            bot.tickPID();
 
 
         }
