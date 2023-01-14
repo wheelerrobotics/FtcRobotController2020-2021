@@ -21,7 +21,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
-import org.firstinspires.ftc.teamcode.comp.utility.Encoders;
 import org.firstinspires.ftc.teamcode.comp.utility.Pose;
 import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
 import org.firstinspires.ftc.teamcode.comp.vision.pipelines.AprilTagDetectionPipeline;
@@ -62,7 +61,7 @@ public class Frant extends Meccanum implements Robot {
     public boolean armDone = false;
     public boolean setupDone = false;
 
-    AprilThread at = new AprilThread();
+    public AprilThread at = new AprilThread();
     public ArmThread armt = new ArmThread();
     public volatile PIDThread pt = new PIDThread();
 
@@ -115,12 +114,11 @@ public class Frant extends Meccanum implements Robot {
         runtime.reset();
     }
     public void autoinit() {
-
-            pt.encoders = new Encoders(0, 0, 0);
             pt.pose = new Pose(0, 0, 0);
             pt.start();
 
             at.start();
+            armDone = true;
     }
     public void teleinit() {
         armt.start();
@@ -169,7 +167,7 @@ public class Frant extends Meccanum implements Robot {
         rTarget = r;
     }
     public boolean done() {
-        return armDone & setupDone;
+        return armDone && setupDone;
     }
 
     public void playSound(String filename){
@@ -294,7 +292,6 @@ public class Frant extends Meccanum implements Robot {
     {
 
 
-        public volatile Encoders encoders = null;
         public volatile Pose pose = null;
         private volatile PID py, px, pr = null;
         public volatile boolean opModeIsActive = true;
@@ -332,12 +329,21 @@ public class Frant extends Meccanum implements Robot {
         public void run() {
             // we record the Y values in the main class to make showing them in telemetry
             // easier.
-            encoders = new Encoders(0, 0, 0);
             pose = new Pose(0, 0, 0);
+            pose.setPose(0, 0, 0);
             Telemetry tele = FtcDashboard.getInstance().getTelemetry();
             double dx = 0;
             double dy = 0;
             double dr = 0;
+            centere = 0;
+            lefte = 0;
+            righte = 0;
+            motorFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motorBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motorFrontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorBackRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             centere = -motorFrontLeft.getCurrentPosition();
             lefte = motorBackLeft.getCurrentPosition();
             righte = motorBackRight.getCurrentPosition();
@@ -413,8 +419,6 @@ public class Frant extends Meccanum implements Robot {
 
                     driveVector(out);
 
-                    // update vals
-                    updateEncoders();
 
                     /*
                     encoders
@@ -470,26 +474,11 @@ public class Frant extends Meccanum implements Robot {
             tele.addData("on", opModeIsActive);
             tele.update();
         }
-        public Encoders getEncoders(){
-            updateEncoders();
-            return encoders;
-        }
         public Pose getPose() {
             return pose;
         }
         public int[] isDone() {
             return new int[]{px.isDone(), py.isDone(), pr.isDone()};
-        }
-        public void updateEncoders(){
-            try {
-                encoders.right = motorBackLeft.getCurrentPosition();
-                encoders.left = - motorBackRight.getCurrentPosition();
-                encoders.center = motorFrontLeft.getCurrentPosition();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-
         }
     }
 }

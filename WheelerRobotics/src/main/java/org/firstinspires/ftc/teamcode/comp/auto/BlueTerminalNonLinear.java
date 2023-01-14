@@ -27,6 +27,7 @@ public class BlueTerminalNonLinear extends OpMode {
         bot.init(hardwareMap);
         bot.autoinit();
     }
+    @Override
     public void start() {
         cooldown.reset();
         conePosition = 0;
