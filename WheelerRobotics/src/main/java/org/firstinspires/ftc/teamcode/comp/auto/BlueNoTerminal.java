@@ -63,6 +63,7 @@ public class BlueNoTerminal extends LinearOpMode {
 
 
         }
+        System.exit(0);
         bot.setPIDTActive(false);
         bot.setPIDActive(false);
 

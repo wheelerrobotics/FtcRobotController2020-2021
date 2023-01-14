@@ -64,7 +64,7 @@ public class RedTerminal extends LinearOpMode {
 
 
         }
-
+        System.exit(0);
         bot.setPIDTActive(false);
         bot.setPIDActive(false);
         bot.pt.interrupt();
