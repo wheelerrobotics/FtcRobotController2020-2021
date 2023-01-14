@@ -13,6 +13,7 @@ public class ControllerMapFrantFC implements ControllerMap {
     Gamepad gamepad1 = null;
     Gamepad gamepad2 = null;
     boolean notOrbiting = true;
+    boolean clawToggledAlready = false;
 
     public void init(Robot robot, Gamepad gp1, Gamepad gp2){
         bot = (Frant) robot;
@@ -128,13 +129,14 @@ public class ControllerMapFrantFC implements ControllerMap {
 
     @Override
     public void buttonB2() {
-        bot.setClaw(true);
+
     }
 
     @Override
     public void buttonA2() {
 
-        bot.setClaw(false);
+        bot.setClaw(!bot.getClaw());
+        clawToggledAlready = true;
 
     }
 
@@ -154,7 +156,8 @@ public class ControllerMapFrantFC implements ControllerMap {
 
     @Override
     public void checkButtons() {
-        if (gamepad2.a) buttonA2();
+        if (gamepad2.a && !clawToggledAlready) buttonA2();
+        else if (!gamepad2.a) clawToggledAlready = false;
         if (gamepad2.b) buttonB2();
         if (gamepad2.x) buttonX2();
         if (gamepad2.y) buttonY2();

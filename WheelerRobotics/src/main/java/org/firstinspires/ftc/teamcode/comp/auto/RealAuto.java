@@ -32,7 +32,7 @@ public class RealAuto extends LinearOpMode {
         ElapsedTime cooldown = new ElapsedTime();
         cooldown.reset();
         while (opModeIsActive()) {
-            bot.pidActive = true;
+            bot.setPIDActive(true);
 
 
             if (currentMovementID == 0) {
@@ -57,8 +57,8 @@ public class RealAuto extends LinearOpMode {
 
 
         }
-        bot.pidActive = false;
-        bot.opModeIsActive = false;
+        bot.setPIDTActive(false);
+        bot.setPIDActive(false);
 
 
     }

@@ -35,6 +35,9 @@ public class Frant extends Meccanum implements Robot {
     protected HardwareMap hw = null;
     public static double OPEN_POSITION = 0.3;
     public static double CLOSED_POSITION = 0;
+    public static double ai = 0.0001;
+    public static double ap = 0.1;
+    public static double ad = 0.1;
     public static double xp = 0.00005;
     public static double xd = 0.0004;
     public static double yp = 0.00005;
@@ -42,7 +45,8 @@ public class Frant extends Meccanum implements Robot {
     public static double rp = 0.000;
     public static double rd = 0.000;
     public static double dthresh = 0.001;
-    public double scaleFactor = 0.6;
+    public boolean driverOperating = true;
+    public double scaleFactor = 0.5;
 
     public double stalPower = 0.08;
     protected Servo claw = null;
@@ -52,12 +56,15 @@ public class Frant extends Meccanum implements Robot {
     double xTarget = 0;
     double yTarget = 0;
     double rTarget = 0;
+    double aTarget = 0;
 
-    public boolean opModeIsActive = true;
-    public boolean pidActive = false;
+
+    public boolean armDone = false;
+    public boolean setupDone = false;
 
     AprilThread at = new AprilThread();
-    PIDThread pt = new PIDThread();
+    public ArmThread armt = new ArmThread();
+    public volatile PIDThread pt = new PIDThread();
 
     @Override
     public void init(HardwareMap hardwareMap) {
@@ -81,6 +88,7 @@ public class Frant extends Meccanum implements Robot {
         motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
         motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
 
+
         // Reverse the left side motors and set behaviors to stop instead of coast
 
         motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -103,32 +111,36 @@ public class Frant extends Meccanum implements Robot {
         // define hw as the hardware map for possible access later in this class
         hw = hardwareMap;
 
-
+        setupDone = true;
         runtime.reset();
     }
     public void autoinit() {
-            pt.start();
+
             pt.encoders = new Encoders(0, 0, 0);
+            pt.pose = new Pose(0, 0, 0);
+            pt.start();
 
             at.start();
     }
-
-    /*
-    public sampleSensorsForPose() {
-        this.dx =
+    public void teleinit() {
+        armt.start();
+        armDone = true;
     }
-    public updatePose(){
 
-    }
-*/
 
     public Pose getPose() {
         return pt.pose;
+
     }
     public void setClaw(boolean open) {
         claw.setPosition(open ? OPEN_POSITION : CLOSED_POSITION);
     }
-
+    public boolean getClaw() {
+        return claw.getPosition() == OPEN_POSITION;
+    }
+    public double getClawHeight() {
+        return armHeight.getDistance(DistanceUnit.CM);
+    }
     public int getPrincipalTag(){
         return at.getDetected();
     }
@@ -141,11 +153,23 @@ public class Frant extends Meccanum implements Robot {
         }
 
     }
+    public void setPIDTActive(boolean active) {
+        pt.end(active);
+    }
+    public void setArmActive(boolean active) {
+        armt.opModeIsActive = active;
+    }
+    public void setPIDActive(boolean active) {
+        pt.pidActive = active;
+    }
 
     public void pidDrive(double x, double y, double r) {
         xTarget = x;
         yTarget = y;
         rTarget = r;
+    }
+    public boolean done() {
+        return armDone & setupDone;
     }
 
     public void playSound(String filename){
@@ -222,11 +246,59 @@ public class Frant extends Meccanum implements Robot {
         }
     }
 
-    private class PIDThread extends Thread
+    public void setTargetArmHeight(double height) {
+        aTarget = height;
+    }
+
+    public class ArmThread extends Thread {
+        private PID arm_pid = null;
+        public volatile boolean opModeIsActive = true;
+
+        @Override
+        public void run() {
+            double height = getClawHeight();
+
+            arm_pid = new PID(ap, 0, ad, true);
+            arm_pid.init(height);
+
+
+            while (!isInterrupted() && opModeIsActive) {
+
+                try {
+
+
+                    height = getClawHeight();
+                    if (height > 800) continue;
+                    arm_pid.setConsts(ap, 0, ad);
+                    arm_pid.setTarget(aTarget);
+
+                    double e = arm_pid.tick(height);
+                    if (!driverOperating) {
+                        if (arm_pid.isDone() == 1) {
+                            armDrive(0);
+                        }
+                        armDrive(e);
+                    }
+
+
+
+                }
+                catch (Exception e){
+                    continue;
+                }
+
+            }
+        }
+    }
+    public class PIDThread extends Thread
     {
 
-        private Encoders encoders = new Encoders(0, 0, 0);
-        private PID py, px, pr = null;
+
+        public volatile Encoders encoders = null;
+        public volatile Pose pose = null;
+        private volatile PID py, px, pr = null;
+        public volatile boolean opModeIsActive = true;
+        public volatile boolean pidActive = false;
         ElapsedTime et = new ElapsedTime();
         protected double[] left = {
                 1,  -1,
@@ -240,30 +312,38 @@ public class Frant extends Meccanum implements Robot {
                 -1,  1,
                 -1,  1
         };
-        Pose pose = new Pose(0, 0, 0);
         public PIDThread() {
             this.setName("PoseThread");
             pose = new Pose(0, 0, 0);
 
         }
-
+        volatile double centere;
+        volatile double lefte;
+        volatile double righte;
+        volatile double lastCenter;
+        volatile double lastLeft;
+        volatile double lastRight;
         // called when tread.start is called. thread stays in loop to do what it does until exit is
         // signaled by main code calling thread.interrupt.
+        public void end(boolean val) {
+            opModeIsActive = val;
+        }
         @Override
         public void run() {
             // we record the Y values in the main class to make showing them in telemetry
             // easier.
-
+            encoders = new Encoders(0, 0, 0);
+            pose = new Pose(0, 0, 0);
             Telemetry tele = FtcDashboard.getInstance().getTelemetry();
             double dx = 0;
             double dy = 0;
             double dr = 0;
-            double center = -motorFrontLeft.getCurrentPosition();
-            double left = motorBackLeft.getCurrentPosition();
-            double right = motorBackRight.getCurrentPosition();
-            double lastCenter = center;
-            double lastLeft = left;
-            double lastRight = right;
+            centere = -motorFrontLeft.getCurrentPosition();
+            lefte = motorBackLeft.getCurrentPosition();
+            righte = motorBackRight.getCurrentPosition();
+            lastCenter = centere;
+            lastLeft = lefte;
+            lastRight = righte;
 
             py = new PID(yp, 0, yd, false); // don't need to correct for sensor jitter because we are using encoders
             py.init(pose.y);
@@ -271,17 +351,22 @@ public class Frant extends Meccanum implements Robot {
             px.init(pose.x);
             pr = new PID(rp, 0, rd, false); // -0.025, -0.00008, -0.2
             pr.init(pose.r);
-            double db = 0;
-            double da = 0;
-            double dc = 0;
+            double deltaCenter = 0;
+            double deltaRight = 0;
+            double deltaLeft = 0;
 
 
             while (!isInterrupted() && opModeIsActive) {
+                if (isInterrupted()) return;
                 if (!pidActive) continue;
+                if (!opModeIsActive) return;
                 try {
                     // TODO: add dimension for rotation, will involve calculating x/y with rotation
                     //  in mind thus a combination of current x/y encoder readings. We want to
                     //  maintain an absolute positioning system (field centric)
+                    if (et.milliseconds() < 1000) {
+                        pose.setPose(0, 0, 0);
+                    }
                     double xScaler = (220787f / 240f);
                     double yScaler = (220787f / 240f);
                     double rScaler = (130538f / (6 * PI)) * (180/PI);
@@ -344,21 +429,24 @@ public class Frant extends Meccanum implements Robot {
                                 b
                           view from top
                      */
-                    center = -motorFrontLeft.getCurrentPosition();
-                    left = motorBackLeft.getCurrentPosition();
-                    right = -motorBackRight.getCurrentPosition();
-                    db = (center) - lastCenter;
-                    da = right - lastRight;
-                    dc = left - lastLeft;
-                    dx = db - (da+dc) / 2;
-                    dy = (da-dc) / 2;
-                    dr = (da+dc) / 2;
+
+                    centere = -motorFrontLeft.getCurrentPosition();
+                    lefte = motorBackLeft.getCurrentPosition();
+                    righte = -motorBackRight.getCurrentPosition();
+
+
+                    deltaCenter = (centere) - lastCenter;
+                    deltaRight = righte - lastRight;
+                    deltaLeft = lefte - lastLeft;
+                    dx = deltaCenter - (deltaRight+deltaLeft) / 2;
+                    dy = (deltaRight-deltaLeft) / 2;
+                    dr = (deltaRight+deltaLeft) / 2;
                     tele.addData("dr", dr);
                     tele.addData("dx", dx);
                     tele.addData("dy", dy);
-                    lastCenter = center;
-                    lastLeft = left;
-                    lastRight = right;
+                    lastCenter = centere;
+                    lastLeft = lefte;
+                    lastRight = righte;
                     pose.setPose(dx + pose.x, dy + pose.y, dr + pose.r);
 
                     tele.addData("pr", pose.r);
@@ -378,8 +466,9 @@ public class Frant extends Meccanum implements Robot {
                 catch (Exception e){
                     e.printStackTrace();
                 }
-
             }
+            tele.addData("on", opModeIsActive);
+            tele.update();
         }
         public Encoders getEncoders(){
             updateEncoders();

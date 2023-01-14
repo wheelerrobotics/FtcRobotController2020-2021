@@ -86,8 +86,8 @@ public class PID {
         sinceLastMeasurement = timeNow - sinceStart;
         sinceStart = timeNow;
         if (this.correctJitter) {
-            for (int i = 1; i < pastJitter.length; i++) pastJitter[i-1] = pastJitter[i];
-            pastJitter[pastJitter.length - 1] = currentMeasurement;
+            for (int i = 1; i < 5; i++) pastJitter[i-1] = pastJitter[i];
+            pastJitter[4] = currentMeasurement;
         }
 
         double pastJitterAvg = averageArr(pastJitter);
