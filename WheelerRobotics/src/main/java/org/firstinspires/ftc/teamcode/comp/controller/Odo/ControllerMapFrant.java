@@ -19,6 +19,7 @@ public class ControllerMapFrant implements ControllerMap {
     public static double medHeight = 59.0;
     public static double lowHeight = 38.0;
 
+    boolean slow = false;
     public void init(Robot robot, Gamepad gp1, Gamepad gp2){
         bot = (Frant) robot;
         gamepad1 = gp1;
@@ -193,8 +194,8 @@ public class ControllerMapFrant implements ControllerMap {
         if (gamepad2.right_bumper) rightBumper2();
         if (gamepad2.left_bumper) leftBumper2();
 
-        if (gamepad1.a) buttonA();
-        else notOrbiting = true;
+        if (gamepad1.a) slow = true;
+        else slow = false;
         if (gamepad1.b) buttonB();
         if (gamepad1.x) buttonX();
         if (gamepad1.y) buttonY();
@@ -210,7 +211,7 @@ public class ControllerMapFrant implements ControllerMap {
 
     @Override
     public void checkJoysticks() {
-        bot.motorDriveXYVectors(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x);
+        bot.motorDriveXYVectors(-gamepad1.left_stick_x * (slow ? 0.5 : 1), -gamepad1.left_stick_y * (slow ? 0.5 : 1), -gamepad1.right_stick_x * 0.75 * (slow ? 0.5 : 1));
         if (gamepad2.left_stick_y != 0) bot.driverOperating = true;
         if (bot.driverOperating) bot.armDrive(-gamepad2.left_stick_y);
     }

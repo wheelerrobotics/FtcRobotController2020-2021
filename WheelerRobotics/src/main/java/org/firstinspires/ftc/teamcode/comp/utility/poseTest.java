@@ -26,7 +26,6 @@ public class poseTest extends LinearOpMode {
 
         while (opModeIsActive()) {
             bot.pidActive = true;
-            bot.pidDrive(x, y, r);
 
 
         }

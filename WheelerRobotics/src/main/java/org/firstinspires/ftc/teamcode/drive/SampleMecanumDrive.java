@@ -1,5 +1,17 @@
 package org.firstinspires.ftc.teamcode.drive;
 
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_ACCEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_VEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_VEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MOTOR_VELO_PID;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.RUN_USING_ENCODER;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.TRACK_WIDTH;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.encoderTicksToInches;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kA;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kStatic;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.config.Config;
@@ -35,18 +47,6 @@ import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_ACCEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_VEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_VEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MOTOR_VELO_PID;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.RUN_USING_ENCODER;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.TRACK_WIDTH;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.encoderTicksToInches;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kA;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kStatic;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 
 /*
  * Simple mecanum drive hardware implementation for REV hardware.
@@ -89,10 +89,10 @@ public class SampleMecanumDrive extends MecanumDrive {
         }
 
         // TODO: adjust the names of the following hardware devices to match your configuration
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
-        imu.initialize(parameters);
+        //imu = hardwareMap.get(BNO055IMU.class, "imu");
+        //BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        //parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
+        //imu.initialize(parameters);
 
         // TODO: If the hub containing the IMU you are using is mounted so that the "REV" logo does
         // not face up, remap the IMU axes so that the z-axis points upward (normal to the floor.)
@@ -121,8 +121,8 @@ public class SampleMecanumDrive extends MecanumDrive {
         rightRear = hardwareMap.get(DcMotorEx.class, "motorBackRight");
         rightFront = hardwareMap.get(DcMotorEx.class, "motorFrontRight");
 
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE); // changed these fron right to left 1/23/2023
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
@@ -297,7 +297,7 @@ public class SampleMecanumDrive extends MecanumDrive {
 
     @Override
     public double getRawExternalHeading() {
-        return imu.getAngularOrientation().firstAngle;
+        return 0; //imu.getAngularOrientation().firstAngle;
     }
 
     @Override

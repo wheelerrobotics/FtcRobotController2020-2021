@@ -64,7 +64,7 @@ public class Frant extends Meccanum implements Robot {
 
     AprilThread at = new AprilThread();
     public ArmThread armt = new ArmThread();
-    public volatile PIDThread pt = new PIDThread();
+    public PIDThread pt = new PIDThread();
 
     @Override
     public void init(HardwareMap hardwareMap) {
@@ -116,6 +116,21 @@ public class Frant extends Meccanum implements Robot {
     }
     public void autoinit() {
 
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motorBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
             pt.encoders = new Encoders(0, 0, 0);
             pt.pose = new Pose(0, 0, 0);
             pt.init();
@@ -123,7 +138,7 @@ public class Frant extends Meccanum implements Robot {
             at.start();
     }
     public void teleinit() {
-        armt.start();
+        armt.init();
         armDone = true;
     }
 
@@ -250,56 +265,52 @@ public class Frant extends Meccanum implements Robot {
         aTarget = height;
     }
 
-    public class ArmThread extends Thread {
+    public class ArmThread {
         private PID arm_pid = null;
-        public volatile boolean opModeIsActive = true;
+        public boolean opModeIsActive = true;
+        double height = 0;
 
-        @Override
-        public void run() {
-            double height = getClawHeight();
-
+        public void init() {
             arm_pid = new PID(ap, 0, ad, true);
             arm_pid.init(height);
 
+        }
+        public void tick() {
 
-            while (!isInterrupted() && opModeIsActive) {
-
-                try {
+            try {
 
 
-                    height = getClawHeight();
-                    if (height > 800) continue;
-                    arm_pid.setConsts(ap, 0, ad);
-                    arm_pid.setTarget(aTarget);
+                height = getClawHeight();
+                if (height > 800) return;
+                arm_pid.setConsts(ap, 0, ad);
+                arm_pid.setTarget(aTarget);
 
-                    double e = arm_pid.tick(height);
-                    if (!driverOperating) {
-                        if (arm_pid.isDone() == 1) {
-                            armDrive(0);
-                        }
-                        armDrive(e);
+                double e = arm_pid.tick(height);
+                if (!driverOperating) {
+                    if (arm_pid.isDone() == 1) {
+                        armDrive(0);
                     }
-
-
-
-                }
-                catch (Exception e){
-                    continue;
+                    armDrive(e);
                 }
 
+
+
+            }
+            catch (Exception e){
+                return;
             }
         }
     }
-    public class PIDThread extends Thread
+    public class PIDThread
     {
 
 
-        public volatile Encoders encoders = null;
+        public Encoders encoders = null;
         Telemetry tele = FtcDashboard.getInstance().getTelemetry();
-        public volatile Pose pose = null;
-        private volatile PID py, px, pr = null;
-        public volatile boolean opModeIsActive = true;
-        public volatile boolean pidActive = false;
+        public Pose pose = null;
+        private PID py, px, pr = null;
+        public boolean opModeIsActive = true;
+        public boolean pidActive = false;
         ElapsedTime et = new ElapsedTime();
         protected double[] left = {
                 1,  -1,
@@ -314,26 +325,27 @@ public class Frant extends Meccanum implements Robot {
                 -1,  1
         };
         public PIDThread() {
-            this.setName("PoseThread");
             pose = new Pose(0, 0, 0);
 
         }
-        volatile double centere;
-        volatile double lefte;
-        volatile double righte;
-        volatile double lastCenter;
-        volatile double lastLeft;
-        volatile double lastRight;
+        double centere;
+        double lefte;
+        double righte;
+        double lastCenter;
+        double lastLeft;
+        double lastRight;
         double dx = 0;
         double dy = 0;
         double dr = 0;
         double deltaCenter = 0;
         double deltaRight = 0;
         double deltaLeft = 0;
+        boolean firstTick = true;
 
         public void init() {
             encoders = new Encoders(0, 0, 0);
             pose = new Pose(0, 0, 0);
+
             dx = 0;
             dy = 0;
             dr = 0;
@@ -363,16 +375,12 @@ public class Frant extends Meccanum implements Robot {
             opModeIsActive = val;
         }
         public void tick() {
-            if (isInterrupted()) return;
             if (!pidActive) return;
             if (!opModeIsActive) return;
-            try {
                 // TODO: add dimension for rotation, will involve calculating x/y with rotation
                 //  in mind thus a combination of current x/y encoder readings. We want to
                 //  maintain an absolute positioning system (field centric)
-                if (et.milliseconds() < 1000) {
-                    pose.setPose(0, 0, 0);
-                }
+
                 double xScaler = (220787f / 240f);
                 double yScaler = (220787f / 240f);
                 double rScaler = (130538f / (6 * PI)) * (180/PI);
@@ -453,6 +461,13 @@ public class Frant extends Meccanum implements Robot {
                 lastCenter = centere;
                 lastLeft = lefte;
                 lastRight = righte;
+                if (firstTick) {
+                    firstTick = false;
+                    dx = 0;
+                    dy = 0;
+                    dr = 0;
+                    pose.setPose(0,0,0);
+                }
                 pose.setPose(dx + pose.x, dy + pose.y, dr + pose.r);
 
                 tele.addData("pr", pose.r);
@@ -468,11 +483,8 @@ public class Frant extends Meccanum implements Robot {
                 tele.addData("encl", motorBackRight.getCurrentPosition());
                 tele.addData("encc", -motorFrontLeft.getCurrentPosition());
                 tele.update();
-        }
-            catch (Exception e) {
-                tele.addData("error", e.getMessage());
-                tele.update();
-            }
+
+
         }
         public Encoders getEncoders(){
             updateEncoders();

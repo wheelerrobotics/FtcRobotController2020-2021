@@ -1,12 +1,9 @@
 package org.firstinspires.ftc.teamcode.comp.controller.Brokey;
 
-import static java.lang.Double.max;
-
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.comp.controller.ControllerMap;
 import org.firstinspires.ftc.teamcode.comp.robot.Odo.Brokey;
-import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 
 // a "simple" class for mapping 2p controller settings
@@ -166,6 +163,11 @@ public class ControllerMapBrokey implements ControllerMap {
         if (gamepad2.b) buttonB2();
         if (gamepad2.x) buttonX2();
         if (gamepad2.y) buttonY2();
+
+
+        if (gamepad2.right_bumper) rightBumper2();
+        if (gamepad2.left_bumper) leftBumper2();
+
         if (gamepad1.a) buttonA();
         else notOrbiting = true;
         if (gamepad1.b) buttonB();
