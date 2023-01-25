@@ -2,23 +2,24 @@ package org.firstinspires.ftc.teamcode.comp.robot.Odo;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 import android.content.Context;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
-import org.firstinspires.ftc.teamcode.comp.helpers.AprilDet;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 import org.firstinspires.ftc.teamcode.comp.utility.Encoders;
@@ -31,16 +32,20 @@ import java.util.ArrayList;
 
 @Config
 public class Odo extends Meccanum implements Robot {
-    protected Servo servo = null;
     protected Telemetry tele = tele = FtcDashboard.getInstance().getTelemetry();
     protected HardwareMap hw = null;
-    public static double xp = 0.0001;
-    public static double xd = 0.0004;
-    public static double yp = 0.0001;
-    public static double yd = 0.0004;
-    public static double rp = 0.000;
-    public static double rd = 0.000;
+
+    public static double trackwidth = 7.505;
+    public static double forward_offset = 4;
+
+    public static double xp = 0; //0.00005;
+    public static double xd = 0; //0.0004;
+    public static double yp = 0; //0.00005; // 0.00005
+    public static double yd = 0; //0.0004; // 0.0004
+    public static double rp = 0; //0.00005;
+    public static double rd = 0; //0.0004;
     public static double dthresh = 0.001;
+    public double scaleFactor = 0.6;
 
     public double stalPower = 0.08;
 
@@ -51,7 +56,7 @@ public class Odo extends Meccanum implements Robot {
     public boolean opModeIsActive = true;
     public boolean pidActive = false;
 
-    AprilDet at = new AprilDet();
+    AprilThread at = new AprilThread();
     PIDThread pt = new PIDThread();
 
     @Override
@@ -68,19 +73,13 @@ public class Odo extends Meccanum implements Robot {
         imu.initialize(parameters);
         // angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
-        //distace sensors (unused for now)
-
-        distanceBack = hardwareMap.get(DistanceSensor.class, "distanceBack");
-        distanceRight = hardwareMap.get(DistanceSensor.class, "distanceRight");
-        distanceLeft = hardwareMap.get(DistanceSensor.class, "distanceLeft");
-        distanceFront = hardwareMap.get(DistanceSensor.class, "distanceFront");
 
         // Meccanum Motors Definition and setting prefs
 
-        motorFrontLeft = hardwareMap.dcMotor.get("motorFrontLeft");
-        motorBackLeft = hardwareMap.dcMotor.get("motorBackLeft");
-        motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
-        motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
+        motorFrontLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontLeft");
+        motorBackLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorBackLeft");
+        motorFrontRight = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontRight");
+        motorBackRight = (DcMotorEx) hardwareMap.dcMotor.get("motorBackRight");
 
         // Reverse the left side motors and set behaviors to stop instead of coast
 
@@ -89,20 +88,21 @@ public class Odo extends Meccanum implements Robot {
         motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // define arm and servo objects and also spinner
-        servo = hardwareMap.get(Servo.class, "servo");
 
-        //set prefs for arm and servo
-        servo.setDirection(Servo.Direction.FORWARD);
+
 
         // define hw as the hardware map for possible access later in this class
         hw = hardwareMap;
 
         pt.start();
 
-        at.init(hardwareMap);
 
         runtime.reset();
+    }
+    public void autoinit() {
+        pt.encoders = new Encoders(0, 0, 0);
+
+        //at.start();
     }
 
     /*
@@ -117,10 +117,9 @@ public class Odo extends Meccanum implements Robot {
     public Pose getPose() {
         return pt.pose;
     }
-    public void alignCamera(){
-        servo.setPosition(0.5);
+    public void tick() {
+        pt.tick();
     }
-
     public int getPrincipalTag(){
         return at.getDetected();
     }
@@ -154,7 +153,7 @@ public class Odo extends Meccanum implements Robot {
     - Would be sick if we actually use tensorflow models. Could be useful for object detection of the junctions.
 
      */
-    private class AprilThread extends Thread {
+    private class AprilThread {// extends Thread {
 
         public ArrayList<AprilTagDetection> detections = new ArrayList<>();
         public BotVision bv = new BotVision();
@@ -166,14 +165,7 @@ public class Odo extends Meccanum implements Robot {
         final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 2.0f;
         final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 7;
 
-        public AprilThread()
-        {
-            this.setName("AprilThread");
-
-
-        }
-        @Override
-        public void run() {
+        public void start() {
             bv.init(hw, atdp);
 
 
@@ -212,7 +204,10 @@ public class Odo extends Meccanum implements Robot {
         }
     }
 
-    private class PIDThread extends Thread
+    public void tickPID() {
+        pt.tick();
+    }
+    private class PIDThread
     {
 
         private Encoders encoders = new Encoders(0, 0, 0);
@@ -234,29 +229,25 @@ public class Odo extends Meccanum implements Robot {
         Pose roboTargetVectors = new Pose(0, 0, 0);
         Pose fieldTargetVectors = new Pose(0, 0, 0);
         Pose fieldTargetPose = new Pose(0, 0, 0);
-        public PIDThread() {
-            this.setName("PoseThread");
 
 
-        }
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        Telemetry tele = FtcDashboard.getInstance().getTelemetry();
+        double dx = 0;
+        double dy = 0;
+        double dr = 0;
+        double ecenter = 0;
+        double eleft = 0;
+        double eright = 0;
+        double lastCenter = 0;
+        double lastLeft = 0;
+        double lastRight = 0;
 
-        // called when tread.start is called. thread stays in loop to do what it does until exit is
-        // signaled by main code calling thread.interrupt.
-        @Override
-        public void run() {
-            // we record the Y values in the main class to make showing them in telemetry
-            // easier.
+        double deltaCenter = 0;
+        double deltaRight = 0;
+        double deltaLeft = 0;
 
-            Telemetry tele = FtcDashboard.getInstance().getTelemetry();
-            double dx = 0;
-            double dy = 0;
-            double dr = 0;
-            double center = -motorFrontLeft.getCurrentPosition();
-            double left = motorBackLeft.getCurrentPosition();
-            double right = motorBackRight.getCurrentPosition();
-            double lastCenter = center;
-            double lastLeft = left;
-            double lastRight = right;
+        public void start() {
 
             py = new PID(yp, 0, yd, false); // don't need to correct for sensor jitter because we are using encoders
             py.init(pose.y);
@@ -264,23 +255,29 @@ public class Odo extends Meccanum implements Robot {
             px.init(pose.x);
             pr = new PID(rp, 0, rd, false); // -0.025, -0.00008, -0.2
             pr.init(pose.r);
-            double db = 0;
-            double da = 0;
-            double dc = 0;
 
+            ecenter = motorFrontLeft.getCurrentPosition();
+            eleft = -motorBackLeft.getCurrentPosition();
+            eright = motorBackRight.getCurrentPosition();
+            lastCenter = ecenter;
+            lastLeft = eleft;
+            lastRight = eright;
 
-            while (!isInterrupted() && opModeIsActive) {
-                if (!pidActive) continue;
-                try {
+        }
+        // called when tread.start is called. thread stays in loop to do what it does until exit is
+        // signaled by main code calling thread.interrupt.
+        public void tick() {
+            // we record the Y values in the main class to make showing them in telemetry
+            // easier.
+
                     // TODO: add dimension for rotation, will involve calculating x/y with rotation
                     //  in mind thus a combination of current x/y encoder readings. We want to
                     //  maintain an absolute positioning system (field centric)
-                    double xScaler = (220787f / 240f);
-                    double yScaler = (220787f / 240f);
-                    double rScaler = (130538f / (6 * PI)) * (180/PI) * (2*PI / -43459);
-                    fieldTargetPose.x = xTarget * xScaler; // in (experimentally obtained)
-                    fieldTargetPose.y = yTarget * yScaler; // in
-                    fieldTargetPose.r = rTarget * rScaler; // radians
+                    double xScaler = (240f / 220787f);
+                    double yScaler = (240f / 220787f);
+                    fieldTargetPose.x = xTarget; // in (experimentally obtained)
+                    fieldTargetPose.y = yTarget; // in
+                    fieldTargetPose.r = rTarget; // radians
 
                     px.setConsts(xp, 0, xd);
                     py.setConsts(yp, 0, yd);
@@ -289,10 +286,6 @@ public class Odo extends Meccanum implements Robot {
                     px.setTarget(fieldTargetPose.x);
                     py.setTarget(fieldTargetPose.y);
                     pr.setTarget(fieldTargetPose.r);
-
-                    tele.addData("sx", px.getDerivative());
-                    tele.addData("sy", py.getDerivative());
-                    tele.addData("sr", pr.getDerivative());
 
 
 
@@ -312,6 +305,12 @@ public class Odo extends Meccanum implements Robot {
                     tele.addData("ex", ex);
                     tele.addData("ey", ey);
                     tele.addData("er", er);
+
+                    TelemetryPacket packet = new TelemetryPacket();
+                    packet.fieldOverlay()
+                            .strokeCircle(pose.y, pose.x, 10).strokeLine(pose.y, pose.x, pose.y + 7*cos(pose.r), pose.x + 7*sin(pose.r));
+                    dashboard.sendTelemetryPacket(packet);
+
                     tele.addData("rex", roboTargetVectors.x);
                     tele.addData("rey", roboTargetVectors.y);
                     tele.addData("rer", roboTargetVectors.r);
@@ -348,42 +347,39 @@ public class Odo extends Meccanum implements Robot {
                                 b
                           view from top
                      */
-                    center = -motorFrontLeft.getCurrentPosition();
-                    left = motorBackLeft.getCurrentPosition();
-                    right = motorBackRight.getCurrentPosition();
-                    db = (center) - lastCenter;
-                    da = right - lastRight;
-                    dc = left - lastLeft;
-                    dx = db - (da+dc) / 2;
-                    dy = (da-dc) / 2;
-                    dr = (da+dc) / 2;
-                    tele.addData("dr", dr);
-                    tele.addData("dx", dx);
-                    tele.addData("dy", dy);
-                    lastCenter = center;
-                    lastLeft = left;
-                    lastRight = right;
-                    pose.setPose(dx + pose.x, dy + pose.y, dr + pose.r);
 
-                    tele.addData("pr", pose.r);
+
+
+                    ecenter = motorFrontLeft.getCurrentPosition();
+                    eleft = -motorBackLeft.getCurrentPosition();
+                    eright = motorBackRight.getCurrentPosition();
+                    // new copied math :)
+                    deltaLeft = eleft - lastLeft;
+                    deltaRight = eright - lastRight;
+                    deltaCenter = ecenter - lastCenter;
+                    // odometry solution: GET MIRRORED ODOMETRY PODS (im so stupid :/)
+                    double phi = (deltaLeft - deltaRight) / trackwidth;
+
+                    double delta_middle_pos = (deltaLeft + deltaRight) / 2;
+                    double delta_perp_pos = deltaCenter - forward_offset * phi;
+
+                    double delta_x = delta_middle_pos * cos(pose.r) - delta_perp_pos * sin(pose.r);
+                    double delta_y = delta_middle_pos * sin(pose.r) + delta_perp_pos * cos(pose.r);
+
+                    pose.setPose(pose.x + delta_x * 96 / 164386.368, pose.y + delta_y * 120.3 / 213441.556, pose.r + phi * (4*PI / 22658.894070619575));
+
+                    lastCenter = ecenter;
+                    lastLeft = eleft;
+                    lastRight = eright;
+
+
                     tele.addData("px", pose.x);
                     tele.addData("py", pose.y);
+                    tele.addData("pr", pose.r);
 
-                    tele.addData("rd", pr.isDone());
-                    tele.addData("xd", px.isDone());
-                    tele.addData("yd", py.isDone());
-
-
-                    tele.addData("encr", motorBackLeft.getCurrentPosition());
-                    tele.addData("encl", motorBackRight.getCurrentPosition());
-                    tele.addData("encc", -motorFrontLeft.getCurrentPosition());
                     tele.update();
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
 
-            }
+
         }
         public Encoders getEncoders(){
             updateEncoders();
@@ -398,7 +394,7 @@ public class Odo extends Meccanum implements Robot {
         public void updateEncoders(){
             try {
                 encoders.right = motorBackLeft.getCurrentPosition();
-                encoders.left = - motorBackRight.getCurrentPosition();
+                encoders.left = -motorBackRight.getCurrentPosition();
                 encoders.center = motorFrontLeft.getCurrentPosition();
             }
             catch (Exception e) {

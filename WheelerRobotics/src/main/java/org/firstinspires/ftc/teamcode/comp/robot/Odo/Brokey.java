@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.comp.robot.Odo;
 
-import static java.lang.Math.abs;
-
 import android.content.Context;
 
 import com.qualcomm.ftccommon.SoundPlayer;
@@ -9,6 +7,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -30,6 +29,7 @@ public class Brokey extends Meccanum implements Robot {
     protected LED led2 = null;
 
     protected HardwareMap hw = null;
+
 
     @Override
     public void init(HardwareMap hardwareMap) {
@@ -59,10 +59,10 @@ public class Brokey extends Meccanum implements Robot {
 
         // Meccanum Motors Definition and setting prefs
 
-        motorFrontLeft = hardwareMap.dcMotor.get("motorFrontLeft");
-        motorBackLeft = hardwareMap.dcMotor.get("motorBackLeft");
-        motorFrontRight = hardwareMap.dcMotor.get("motorFrontRight");
-        motorBackRight = hardwareMap.dcMotor.get("motorBackRight");
+        motorFrontLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontLeft");
+        motorBackLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorBackLeft");
+        motorFrontRight = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontRight");
+        motorBackRight = (DcMotorEx) hardwareMap.dcMotor.get("motorBackRight");
 
         // Reverse the left side motors and set behaviors to stop instead of coast
         motorFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);

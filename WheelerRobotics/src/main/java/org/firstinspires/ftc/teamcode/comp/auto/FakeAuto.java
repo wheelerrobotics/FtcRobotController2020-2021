@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.comp.robot.Odo.Frant;
+import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
 
 @Autonomous
 @Config
@@ -14,24 +14,20 @@ public class FakeAuto extends LinearOpMode {
     public static double x = 0;
     public static double y = 0;
     public static double r = 0;
-    Frant bot = new Frant();
+    Odo bot = new Odo();
     Telemetry tele = FtcDashboard.getInstance().getTelemetry();
 
     public void runOpMode() {
         bot.init(hardwareMap);
-        bot.autoinit();
 
         waitForStart();
 
         while (opModeIsActive()) {
             bot.pidActive = true;
             bot.pidDrive(x, y, r);
-            if(isStopRequested()){
-                bot.opModeIsActive = false;
-            }
+            bot.tick();
+
         }
-        bot.opModeIsActive = false;
-        bot.pidActive = false;
 
 
     }

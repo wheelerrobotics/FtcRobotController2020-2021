@@ -366,9 +366,10 @@ public class Frant extends Meccanum implements Robot {
 
 
                     center = motorFrontLeft.getCurrentPosition();
-                    left = -motorBackLeft.getCurrentPosition();
+                    left = motorBackLeft.getCurrentPosition();
                     right = motorBackRight.getCurrentPosition();
-
+                    double trackwidth = 11;
+                    double forward_offset = 5;
                     // new copied math :)
                     deltaLeft = left - lastLeft;
                     deltaRight = right - lastRight;
