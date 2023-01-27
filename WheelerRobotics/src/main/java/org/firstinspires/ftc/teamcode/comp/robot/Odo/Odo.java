@@ -36,7 +36,7 @@ public class Odo extends Meccanum implements Robot {
     protected HardwareMap hw = null;
 
     public static double trackwidth = 7.505;
-    public static double forward_offset = 4;
+    public static double forward_offset = -4;
 
     public static double xp = 0; //0.00005;
     public static double xd = 0; //0.0004;
@@ -273,8 +273,7 @@ public class Odo extends Meccanum implements Robot {
                     // TODO: add dimension for rotation, will involve calculating x/y with rotation
                     //  in mind thus a combination of current x/y encoder readings. We want to
                     //  maintain an absolute positioning system (field centric)
-                    double xScaler = (240f / 220787f);
-                    double yScaler = (240f / 220787f);
+
                     fieldTargetPose.x = xTarget; // in (experimentally obtained)
                     fieldTargetPose.y = yTarget; // in
                     fieldTargetPose.r = rTarget; // radians
@@ -310,13 +309,16 @@ public class Odo extends Meccanum implements Robot {
                     packet.fieldOverlay()
                             .strokeCircle(pose.y, pose.x, 10).strokeLine(pose.y, pose.x, pose.y + 7*cos(pose.r), pose.x + 7*sin(pose.r));
                     dashboard.sendTelemetryPacket(packet);
+                    packet.fieldOverlay()
+                            .strokeCircle(fieldTargetPose.y, fieldTargetPose.x, 3);
+                    dashboard.sendTelemetryPacket(packet);
 
                     tele.addData("rex", roboTargetVectors.x);
                     tele.addData("rey", roboTargetVectors.y);
                     tele.addData("rer", roboTargetVectors.r);
 
                     for (int i = 0; i<out.length; i++) { // add the individual vectors
-                        out[i] = -roboTargetVectors.x * this.left[i] + roboTargetVectors.y * this.back[i] + roboTargetVectors.r * this.clock[i];
+                        out[i] = roboTargetVectors.x * this.left[i] + roboTargetVectors.y * this.back[i] + roboTargetVectors.r * this.clock[i];
                     }
 
                     // TODO: is there anything wrong with linear scaling (dividing by greatest value) here?
@@ -363,8 +365,8 @@ public class Odo extends Meccanum implements Robot {
                     double delta_middle_pos = (deltaLeft + deltaRight) / 2;
                     double delta_perp_pos = deltaCenter - forward_offset * phi;
 
-                    double delta_x = delta_middle_pos * cos(pose.r) - delta_perp_pos * sin(pose.r);
-                    double delta_y = delta_middle_pos * sin(pose.r) + delta_perp_pos * cos(pose.r);
+                    double delta_y = delta_middle_pos * cos(pose.r) - delta_perp_pos * sin(pose.r);
+                    double delta_x = delta_middle_pos * sin(pose.r) + delta_perp_pos * cos(pose.r);
 
                     pose.setPose(pose.x + delta_x * 96 / 164386.368, pose.y + delta_y * 120.3 / 213441.556, pose.r + phi * (4*PI / 22658.894070619575));
 

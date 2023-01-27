@@ -29,6 +29,6 @@ public class Pose {
         double theta = (x==0) ? ((PI/2) * (y/abs(y))) : atan(y/x);
         double mag = Math.sqrt(x*x + y*y);
 
-        return new Pose(mag*cos(theta+r), -mag*sin(theta+r), r);
+        return new Pose(mag*cos(theta+r) * (x/abs(x)), -mag*sin(theta+r), r);
     }
 }
