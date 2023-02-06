@@ -22,13 +22,11 @@ public class Pose {
         this.y = y;
         this.r = r;
     }
-    public Pose getPoseRobotCentric() {
+    public Pose getPoseRobotCentric(double curr) {
 
-
-
-        double theta = (x==0) ? ((PI/2) * (y/abs(y))) : atan(y/x);
+        double theta = (x==0) ? ((PI/2) * (y/abs(y))) : atan(y/x) + (x < 0 ? PI : 0);
         double mag = Math.sqrt(x*x + y*y);
 
-        return new Pose(mag*cos(theta+r) * (x/abs(x)), -mag*sin(theta+r), r);
+        return new Pose(mag*cos(theta+curr), mag*sin(theta+curr), r);
     }
 }

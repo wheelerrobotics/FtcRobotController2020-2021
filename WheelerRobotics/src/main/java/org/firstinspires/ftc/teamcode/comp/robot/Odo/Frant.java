@@ -313,7 +313,7 @@ public class Frant extends Meccanum implements Robot {
                     fieldTargetVectors.y = ey;
                     fieldTargetVectors.r = er;
 
-                    roboTargetVectors = fieldTargetVectors.getPoseRobotCentric();
+                    roboTargetVectors = fieldTargetVectors.getPoseRobotCentric(pose.r);
 
 
 

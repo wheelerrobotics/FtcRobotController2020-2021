@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @Config
 public class PID {
     public static double dThresh = 0.01;
-    public static double eThresh = 300;
+    public static double eThresh = 2;
     double integral = 0;
     double derivative = 0;
     double proportion = 0;
@@ -108,7 +108,7 @@ public class PID {
         if(!p) et.reset();
     }
     public int isDone() {
-        return (abs(derivative) < dThresh) ? 1:0;
+        return (abs(derivative) < dThresh && abs(error) < eThresh) ? 1:0;
     }
 
 }
