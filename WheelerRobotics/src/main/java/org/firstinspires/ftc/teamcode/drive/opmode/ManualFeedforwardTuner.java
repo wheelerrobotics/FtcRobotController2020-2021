@@ -17,10 +17,10 @@ import com.acmerobotics.roadrunner.profile.MotionProfileGenerator;
 import com.acmerobotics.roadrunner.profile.MotionState;
 import com.acmerobotics.roadrunner.util.NanoClock;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 import java.util.Objects;
@@ -42,7 +42,6 @@ import java.util.Objects;
  */
 @Config
 @Autonomous(group = "drive")
-@Disabled
 public class ManualFeedforwardTuner extends LinearOpMode {
     public static double DISTANCE = 72; // in
 
@@ -62,6 +61,7 @@ public class ManualFeedforwardTuner extends LinearOpMode {
         MotionState goal = new MotionState(movingForward ? DISTANCE : 0, 0, 0, 0);
         return MotionProfileGenerator.generateSimpleMotionProfile(start, goal, MAX_VEL, MAX_ACCEL);
     }
+
     @Override
     public void runOpMode() {
         if (RUN_USING_ENCODER) {
@@ -69,7 +69,7 @@ public class ManualFeedforwardTuner extends LinearOpMode {
                     "when using the built-in drive motor velocity PID.");
         }
 
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        Telemetry telemetry = new MultipleTelemetry(this.telemetry, dashboard.getTelemetry());
 
         drive = new SampleMecanumDrive(hardwareMap);
 
