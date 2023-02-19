@@ -1,23 +1,42 @@
 package org.firstinspires.ftc.teamcode.comp.controller.Odo;
 
+import static java.lang.Math.PI;
+
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.comp.controller.ControllerMap;
 import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 // a "simple" class for mapping 2p controller settings
 
 public class ControllerMapOdo implements ControllerMap {
     Odo bot = null;
+    SampleMecanumDrive drive = null;
     Gamepad gamepad1 = null;
     Gamepad gamepad2 = null;
     boolean notOrbiting = true;
+    Trajectory traj = null;
+    Trajectory stop = null;
+    volatile boolean trajing = false;
 
-    public void init(Robot robot, Gamepad gp1, Gamepad gp2){
+    public void init(Robot robot, SampleMecanumDrive d, Gamepad gp1, Gamepad gp2){
         bot = (Odo) robot;
+        drive = d;
         gamepad1 = gp1;
         gamepad2 = gp2;
+        traj = drive.trajectoryBuilder(new Pose2d())
+                .lineToLinearHeading(new Pose2d(66, -2, PI/2))
+                .build();
+        stop = drive.trajectoryBuilder(new Pose2d()).forward(0.01).build();
+    }
+
+    @Override
+    public void init(Robot robot, Gamepad gp1, Gamepad gp2) {
+
     }
 
     @Override
@@ -143,7 +162,8 @@ public class ControllerMapOdo implements ControllerMap {
 
     @Override
     public void buttonY2() {
-
+        drive.followTrajectoryAsync(traj);
+        trajing = true;
     }
 
     @Override
@@ -178,7 +198,15 @@ public class ControllerMapOdo implements ControllerMap {
 
     @Override
     public void checkJoysticks() {
+        if ((gamepad1.left_stick_x != 0 || gamepad1.left_stick_y !=0 || gamepad1.right_stick_x !=0) && trajing) {
+            trajing = false;
+        }
+        if (trajing) {
+            drive.update();
+            return;
+        }
         bot.motorDriveXYVectors(gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
+
     }
 
 }

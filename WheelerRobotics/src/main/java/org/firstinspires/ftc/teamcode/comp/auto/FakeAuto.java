@@ -19,26 +19,14 @@ public class FakeAuto extends LinearOpMode {
 
     public void runOpMode() {
         bot.init(hardwareMap);
-        bot.setMovement(movement);
+        bot.slideinit();
 
         waitForStart();
         ElapsedTime cooldown = new ElapsedTime();
 
         cooldown.reset();
         while (opModeIsActive()) {
-            bot.setMovement(movement);
-            bot.pidActive = true;
-            if (currentMovementID % 2 == 0) bot.pidDrive(0, 0, 0);
-            if (currentMovementID % 2 == 1) bot.pidDrive(x, y, r);
-
-            if (bot.isDone()[0] == 1 && bot.isDone()[1] == 1 && bot.isDone()[2] == 1 && cooldown.milliseconds() > 500){
-                currentMovementID++;
-                cooldown.reset();
-                while (cooldown.milliseconds() < 500);
-                cooldown.reset();
-            }
-            bot.tickPID();
-
+            bot.tick();
         }
 
 

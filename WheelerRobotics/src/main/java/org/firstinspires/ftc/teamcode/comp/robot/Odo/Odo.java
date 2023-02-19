@@ -73,6 +73,7 @@ public class Odo extends Meccanum implements Robot {
     public boolean pidActive = false;
 
     PIDThread pt = new PIDThread();
+    SlideThread st = new SlideThread();
 
     @Override
     public void init(HardwareMap hardwareMap) {
@@ -109,13 +110,16 @@ public class Odo extends Meccanum implements Robot {
         // define hw as the hardware map for possible access later in this class
         hw = hardwareMap;
 
-        pt.start();
 
 
         runtime.reset();
     }
+    public void slideinit() {
+        st.start();
+    }
     public void autoinit() {
         pt.encoders = new Encoders(0, 0, 0);
+        pt.start();
 
         //at.start();
     }
@@ -224,6 +228,12 @@ public class Odo extends Meccanum implements Robot {
     }
     public void setMovement(boolean movement) {
         pt.setMovement(movement);
+    }
+    private class SlideThread {
+        public void start() {
+
+        }
+
     }
     private class PIDThread
     {

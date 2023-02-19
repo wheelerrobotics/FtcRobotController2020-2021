@@ -18,10 +18,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
+import org.firstinspires.ftc.teamcode.comp.helpers.AprilDet;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 import org.firstinspires.ftc.teamcode.comp.utility.Encoders;
@@ -33,7 +35,7 @@ import org.openftc.apriltag.AprilTagDetection;
 import java.util.ArrayList;
 
 @Config
-public class Triangle extends Meccanum implements Robot {
+public class Lenny extends Meccanum implements Robot {
     protected HardwareMap hw = null;
 
 
@@ -41,7 +43,7 @@ public class Triangle extends Meccanum implements Robot {
     public static double minHeight = 0;
 
     public static double differenceScalar = 0.01;
-    public static double scaler = 0.1;
+    public static double scaler = 0.008;
     public static double sp = 0.003;
     public static double slideTar = 0;
 
@@ -74,8 +76,15 @@ public class Triangle extends Meccanum implements Robot {
     public DcMotorEx slideLeft = null;
     public DcMotorEx slideRight = null;
 
+    public Servo leftArm = null;
+    public Servo rightArm = null;
+    public Servo wrist = null;
+    public Servo claw = null;
+
     PIDThread pt = new PIDThread();
     SlideThread st = new SlideThread();
+    ClawArmWristThread cawt = new ClawArmWristThread();
+    AprilDet ad = null;
 
     @Override
     public void init(HardwareMap hardwareMap) {
@@ -101,6 +110,12 @@ public class Triangle extends Meccanum implements Robot {
         slideRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slideLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         slideRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        claw = hardwareMap.get(Servo.class, "claw"); // port 2
+        wrist = hardwareMap.get(Servo.class, "clawRotation"); // port 3
+        leftArm = hardwareMap.get(Servo.class, "leftArm"); // port 4
+        rightArm = hardwareMap.get(Servo.class, "rightArm"); // port 5
+
         // Meccanum Motors Definition and setting prefs
 
         // motorFrontLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontLeft");
@@ -130,6 +145,13 @@ public class Triangle extends Meccanum implements Robot {
     public void slideinit() {
         st.start();
     }
+    public void cawtinit() {
+        cawt.start();
+    }
+    public void detinit() {
+        ad = new AprilDet();
+        ad.init(hw);
+    }
     public void autoinit() {
         pt.encoders = new Encoders(0, 0, 0);
         pt.start();
@@ -146,7 +168,8 @@ public class Triangle extends Meccanum implements Robot {
     }
 */
     public int getPrincipalTag(){
-        return 0;
+        ad.checkDetections();
+        return ad.getDetected();
     }
 
 
@@ -230,8 +253,90 @@ public class Triangle extends Meccanum implements Robot {
     public void setSlideTarget(double target) {
         st.setTarget(target);
     }
+    public void setArmTarget(double target) {
+        cawt.setArmTarget(target);
+    }
+    public void setWristTarget(double target) {
+        cawt.setWristTarget(target);
+    }
+    public void setClawTarget(double target) {
+        cawt.setClawTarget(target);
+    }
     public void setTele(Telemetry t) {
         st.setTele(t);
+    }
+    public boolean isBusy() {
+        // true if there are any unresolved targets in caws
+    }
+    private class ClawArmWristThread {
+        public double clawClosed = 0.7; // 0.76 for non-straining I think
+        public double clawOpen = 1;
+        public double levelWristPlace = 0.05;
+        // will we ever want a non level claw rot for cycling back from a place? or does that just complicate too much :/
+        public double levelWristPickup = 0.725;
+        public double lowArmPickup = 0.92;
+        public double levelArmPickup = 0.915;
+        public double upSlantArmPlace = 0.31;
+        public double levelArmPlace = 0.24;
+        public double beforeSlidesArmPlace = 0.53;
+        public double beforeSlidesArmPickup = 0.63;
+
+        // TODO: should make function out of needed values so for some arbitrary clawPos I can extrapolate maxClawBeforeSlidesDistance for Pickup/Placea
+        // TODO: NEEDED VALUES: how close the claw hits the slides (each side) if closed and rotating
+        public double maxClawClosedBeforeSlidesDistancePickup = 0.69; // GUESS
+        public double maxClawClosedBeforeSlidesDistancePlace = 0.47; // GUESS
+        // TODO: NV: how close claw hits slides (each side) when open and rotating
+        public double maxClawOpenBeforeSlidesDistancePickup = 0.8; // GUESS
+        public double maxClawOpenBeforeSlidesDistancePlace = 0.36; // GUESS
+
+        public double armTarget = lowArmPickup;
+        public double wristTarget = levelWristPickup;
+        public double clawTarget = clawOpen;
+
+        Telemetry tele = FtcDashboard.getInstance().getTelemetry();
+        public void setTele(Telemetry t) {
+            tele = t;
+        }
+
+        public void start() {
+
+        }
+
+        public void tick() {
+            setArmPos(armTarget);
+            setWristPos(wristTarget);
+            setClawPos(clawTarget);
+
+        }
+        public void setArmTarget(double target) {
+            armTarget = target;
+        }
+        public void setWristTarget(double target) {
+            armTarget = target;
+        }
+        public void setClawTarget(double target) {
+            clawTarget = target;
+        }
+        // second priority (shoudnt ever conflict tho)
+        public void setClawPos(double pos) {
+
+        }
+        // third priority
+        public void setWristPos(double pos) {
+            if (clawTarget == clawOpen) {
+                if (armTarget < maxClawClosedBeforeSlidesDistancePickup && getArmPos() > maxClawClosedBeforeSlidesDistancePickup) {
+
+                }
+            }
+        }
+        // first priority
+        public void setArmPos(double pos) {
+            rightArm.setPosition(pos > 0.03 ? pos : 0);
+            leftArm.setPosition(pos-0.03 > 0 ? pos-0.03 : 0);
+        }
+        public double getArmPos() {
+            return rightArm.getPosition();
+        }
     }
     private class SlideThread {
         public double leftBasePos = 0;
@@ -272,29 +377,30 @@ public class Triangle extends Meccanum implements Robot {
             tele.addData("left", leftPos);
             tele.addData("right", rightPos);
 
+            if ((leftPos + rightPos) /2 < minHeight  && power < 0) {
+                SLIDE_TARGETING = true;
+                slideTar = minHeight;
+            }
+            if ((rightPos+leftPos)/2 > maxHeight && power > 0) {
+                SLIDE_TARGETING = true;
+                slideTar = maxHeight;
+            }
             if (SLIDE_TARGETING) {
                 power = slidePID.tick((leftPos + rightPos) / 2);
                 tele.addData("pidpower", power);
             }
 
-            if ((leftPos + rightPos) /2 < minHeight) {
-                SLIDE_TARGETING = true;
-                slideTar = minHeight  ;
-            }
-            if ((rightPos+leftPos)/2 > maxHeight) {
-                SLIDE_TARGETING = true;
-                slideTar = maxHeight;
-            }
-            slideLeft.setPower(minMaxScaler(leftPos, (power + differenceScaler(rightPos - leftPos))));
-            slideRight.setPower(minMaxScaler(rightPos, (power + differenceScaler(leftPos - rightPos))));
             tele.addData("drivingl", minMaxScaler(leftPos, (power + differenceScaler(rightPos - leftPos))));
             tele.addData("drivingr", minMaxScaler(rightPos, (power + differenceScaler(leftPos - rightPos))));
             tele.addData("dl", differenceScaler(rightPos - leftPos));
             tele.addData("dr", differenceScaler(leftPos - rightPos));
             tele.update();
+
+            slideLeft.setPower(minMaxScaler(leftPos, (power + differenceScaler(rightPos - leftPos))));
+            slideRight.setPower(minMaxScaler(rightPos, (power + differenceScaler(leftPos - rightPos))));
         }
         public double minMaxScaler(double x, double power) {
-            return power * (power < 0 ? (1/(1+pow(E, -scaler*(x+3+minHeight)))) : (1/(1+pow(E, scaler*(x+3-maxHeight)))));
+            return power * (power < 0 ? ((1.3 * 1/(1+pow(E, -scaler*(x-300+minHeight)))) - 0.1) : ((1.3 * 1/(1+pow(E, scaler*(x+300-maxHeight)))) - 0.1));
         }
         public double differenceScaler(double difference) {
             return differenceScalar * difference;
