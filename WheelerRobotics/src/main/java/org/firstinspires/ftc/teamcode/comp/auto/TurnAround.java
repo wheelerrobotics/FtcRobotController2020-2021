@@ -132,11 +132,6 @@ public class TurnAround extends LinearOpMode {
                 .build();
 
 
-        // strafe more
-
-        // Scan Signal
-
-
         drive = new SampleMecanumDrive(hardwareMap);
         bot.init(hardwareMap);
         bot.slideinit();

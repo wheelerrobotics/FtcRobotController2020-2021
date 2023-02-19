@@ -1,17 +1,13 @@
 package org.firstinspires.ftc.teamcode.comp.robot.Odo;
 
 import static java.lang.Math.E;
-import static java.lang.Math.PI;
 import static java.lang.Math.abs;
-import static java.lang.Math.cos;
 import static java.lang.Math.pow;
-import static java.lang.Math.sin;
 
 import android.content.Context;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -26,52 +22,19 @@ import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.helpers.AprilDet;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
-import org.firstinspires.ftc.teamcode.comp.utility.Encoders;
-import org.firstinspires.ftc.teamcode.comp.utility.Pose;
-import org.firstinspires.ftc.teamcode.comp.vision.BotVision;
-import org.firstinspires.ftc.teamcode.comp.vision.pipelines.AprilTagDetectionPipeline;
-import org.openftc.apriltag.AprilTagDetection;
-
-import java.util.ArrayList;
 
 @Config
 public class Lenny extends Meccanum implements Robot {
     protected HardwareMap hw = null;
 
 
-    public static double maxHeight = 1000;
-    public static double minHeight = 0;
+    public static double maxHeight = 1000; // change to fit slide
+    public static double minHeight = 0; // probably good (maybe just set to 20 so the 10ish off errors are unnoticed)
 
-    public static double differenceScalar = 0.01;
-    public static double scaler = 0.008;
-    public static double sp = 0.003;
-    public static double slideTar = 0;
-
-    public static double dthresh = 0.001;
-    public double scaleFactor = 0.6;
-    public boolean TESTING = false;
-    public void test() {
-        TESTING = true;
-        pt.start();
-        xp = 1;
-        xd = 0;
-        yd = 0;
-        rd = 0;
-        yp = 1;
-        rp = 1;
-    }
-    public void setTestConsts(Pose pos, Pose target) {
-        pt.setTestPoses(pos, target);
-    }
-
-    public double stalPower = 0.08;
-
-    double xTarget = 0;
-    double yTarget = 0;
-    double rTarget = 0;
-
-    public boolean opModeIsActive = true;
-    public boolean pidActive = false;
+    public static double differenceScalar = 0.01; // scales slide tick difference correction intensity
+    public static double scaler = 0.008; // scales width of simoid, a const goes along with it so dont change on its own
+    public static double sp = 0.003; // slide kp const
+    public static double slideTar = 0; // target of slide (duh)
 
     public DcMotorEx slideLeft = null;
     public DcMotorEx slideRight = null;
@@ -81,7 +44,6 @@ public class Lenny extends Meccanum implements Robot {
     public Servo wrist = null;
     public Servo claw = null;
 
-    PIDThread pt = new PIDThread();
     SlideThread st = new SlideThread();
     ClawArmWristThread cawt = new ClawArmWristThread();
     AprilDet ad = null;
@@ -152,12 +114,6 @@ public class Lenny extends Meccanum implements Robot {
         ad = new AprilDet();
         ad.init(hw);
     }
-    public void autoinit() {
-        pt.encoders = new Encoders(0, 0, 0);
-        pt.start();
-
-        //at.start();
-    }
 
     /*
     public sampleSensorsForPose() {
@@ -193,66 +149,21 @@ public class Lenny extends Meccanum implements Robot {
     - Would be sick if we actually use tensorflow models. Could be useful for object detection of the junctions.
 
      */
-    private class AprilThread {// extends Thread {
-
-        public ArrayList<AprilTagDetection> detections = new ArrayList<>();
-        public BotVision bv = new BotVision();
-        public AprilTagDetectionPipeline atdp =  new AprilTagDetectionPipeline(0.166, 578.272, 578.272, 402.145, 221.506);
-
-        int numFramesWithoutDetection = 0;
-        final int DECIMATION_LOW = 2;
-        final int DECIMATION_HIGH = 3;
-        final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 2.0f;
-        final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 7;
-
-        public void start() {
-            bv.init(hw, atdp);
-
-
-        }
-        public int getDetected(){
-            return checkDetections();
-        }
-        public int checkDetections() {
-            detections = atdp.getDetectionsUpdate();
-            if (detections != null) {
-
-                // If we don't see any tags
-                if (detections.size() == 0) {
-                    numFramesWithoutDetection++;
-
-                    // If we haven't seen a tag for a few frames, lower the decimation
-                    // so we can hopefully pick one up if we're e.g. far back
-                    if (numFramesWithoutDetection >= THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION) {
-                        atdp.setDecimation(DECIMATION_LOW);
-                    }
-                }
-                // We do see tags!
-                else {
-                    numFramesWithoutDetection = 0;
-
-                    // If the target is within 1 meter, turn on high decimation to
-                    // increase the frame rate
-                    if (detections.get(0).pose.z < THRESHOLD_HIGH_DECIMATION_RANGE_METERS) {
-                        atdp.setDecimation(DECIMATION_HIGH);
-                    }
-                }
-
-            }
-
-            return ((detections != null && detections.size() > 0) ? detections.get(0).id : 0);
-        }
-    }
-    public void slideTick() {
+    public void tick() {
         st.tick();
+        cawt.tick();
     }
+
+    public boolean SLIDE_TARGETING = false;
+    //SLIDES
     public void driveSlides(double power) {
         st.driveSlides(power);
     }
-    public boolean SLIDE_TARGETING = false;
     public void setSlideTarget(double target) {
         st.setTarget(target);
     }
+
+    // CAWT (Claw Arm Wrist Thread)
     public void setArmTarget(double target) {
         cawt.setArmTarget(target);
     }
@@ -262,11 +173,10 @@ public class Lenny extends Meccanum implements Robot {
     public void setClawTarget(double target) {
         cawt.setClawTarget(target);
     }
-    public void setTele(Telemetry t) {
-        st.setTele(t);
-    }
+
     public boolean isBusy() {
-        // true if there are any unresolved targets in caws
+        // true if there are any unresolved targets in caw or slide
+        return cawt.isBusy() && st.isBusy();
     }
     private class ClawArmWristThread {
         public double clawClosed = 0.7; // 0.76 for non-straining I think
@@ -306,7 +216,6 @@ public class Lenny extends Meccanum implements Robot {
             setArmPos(armTarget);
             setWristPos(wristTarget);
             setClawPos(clawTarget);
-
         }
         public void setArmTarget(double target) {
             armTarget = target;
@@ -318,24 +227,65 @@ public class Lenny extends Meccanum implements Robot {
             clawTarget = target;
         }
         // second priority (shoudnt ever conflict tho)
+        boolean CLAW_SAFE = false; // never assume safety until checked, dont leave room for nullpointers
         public void setClawPos(double pos) {
+            double buffer = 0.03;
+            CLAW_SAFE = beforeSlidesArmPlace - buffer < getArmPos() && getArmPos() < beforeSlidesArmPickup + buffer;
+            if (CLAW_SAFE) claw.setPosition(pos);
+            else claw.setPosition(clawClosed);
 
         }
         // third priority
+        boolean WRIST_SAFE = false; // never assume safety until checked, dont leave room for nullpointers
         public void setWristPos(double pos) {
-            if (clawTarget == clawOpen) {
-                if (armTarget < maxClawClosedBeforeSlidesDistancePickup && getArmPos() > maxClawClosedBeforeSlidesDistancePickup) {
-
-                }
-            }
+            if (WRIST_SAFE) wrist.setPosition(pos);
+            else wrist.setPosition(abs(pos - levelWristPickup) > abs(pos - levelWristPlace) ? levelWristPlace : levelWristPickup);
         }
-        // first priority
+
+        boolean ARM_THROUGH_SAFE = false; // never assume safety until checked, dont leave room for nullpointers
+        boolean ARM_THROUGH_ON_CURRENT = false; // never assume safety until checked, dont leave room for nullpointers
         public void setArmPos(double pos) {
+            double buffer = 0.1; // safety buffer
+            ARM_THROUGH_SAFE = getWristPos() == levelWristPickup || getWristPos() == levelWristPlace;
+            ARM_THROUGH_ON_CURRENT = (getArmPos() < beforeSlidesArmPlace - buffer && pos > beforeSlidesArmPlace - buffer)
+                    || (getArmPos() > beforeSlidesArmPickup + buffer && pos < beforeSlidesArmPickup + buffer);
+            if (ARM_THROUGH_SAFE) {
+                // if wrist is in non-obstruc pos (with cone), ARM_THROUGH_SAFE, dont care, set arm to whatever
+                setArmPosBasic(pos);
+            }
+            if (ARM_THROUGH_ON_CURRENT && !ARM_THROUGH_SAFE) {
+                // if current movement will pass through slides (ARM_THROUGH_ON_CURRENT),
+                //      and wrist in possibly obstructive place (!ARM_THROUGH_SAFE),
+                //      freeze and rotate wrist first
+                WRIST_SAFE = false;
+                setArmPosBasic(getArmPos()); // freeze arm until safe
+            }
+            // otherwise, wrist is safe to do whatever
+            else WRIST_SAFE = true;
+        }
+        private void setArmPosBasic(double pos) {
+            // servos are slightly off, this corrects.
+            // NOTE: NEVER DIRECTLY SET ARM SERVO POSITIONS WITHOUT THIS FUNCTION!!!!
             rightArm.setPosition(pos > 0.03 ? pos : 0);
             leftArm.setPosition(pos-0.03 > 0 ? pos-0.03 : 0);
         }
         public double getArmPos() {
             return rightArm.getPosition();
+        }
+        public double getClawPos() {
+            return claw.getPosition();
+        }
+        public double getWristPos() {
+            return wrist.getPosition();
+        }
+        public boolean isBusy() {
+            // claw has leway because sometimes set to impossible position in order to squeeze
+            double clawBuffer = 0.08;
+            boolean armBusy = armTarget == getArmPos();
+            boolean clawBusy = (getClawPos() - clawBuffer) < clawTarget && (getClawPos() + clawBuffer) > clawTarget;
+            // !WRIST_SAFE to avoid stalling in a set position for arm in slides while setpos for wrist is weird
+            boolean wristBusy = getWristPos() == wristTarget || !WRIST_SAFE;
+            return armBusy && clawBusy && wristBusy;
         }
     }
     private class SlideThread {
@@ -343,6 +293,8 @@ public class Lenny extends Meccanum implements Robot {
         public double rightBasePos = 0;
         public double leftPos = 0;
         public double rightPos = 0;
+        public double errorThreshold = 20;
+        public double derivativeThreshold = 1;
 
         public double power = 0;
 
@@ -411,284 +363,24 @@ public class Lenny extends Meccanum implements Robot {
             SLIDE_TARGETING = false;
             power = p;
         }
+        public double getSlidesPos() {
+            return (leftPos + rightPos) / 2;
+        }
 
         public void setTarget(double tar) {
             slideTar = tar;
         }
+        public boolean isBusy() {
+
+            return slidePID.getDerivative() < derivativeThreshold && abs(getSlidesPos() - slideTar) < errorThreshold;
+            //                                                       could get proportion (^) from pid but dont want to
+        }
 
     }
 
-    public Pose getPose() {
-        return pt.pose;
-    }
-    public Pose tick() {
-        return pt.tick();
+
+    public void setTele(Telemetry t) {
+        st.setTele(t);
     }
 
-    public void pidDrive(double x, double y, double r) {
-        xTarget = x;
-        yTarget = y;
-        rTarget = r;
-    }
-    public int[] isDone() {
-        return pt.isDone();
-    }
-
-    public void tickPID() {
-        pt.tick();
-    }
-    public void setMovement(boolean movement) {
-        pt.setMovement(movement);
-    }
-    public static double trackwidth = 7.505;
-    public static double forward_offset = -4;
-    public static double scalar = 0.7;
-
-    public static double xp = 0.06; //0.00005;
-    public static double xd = 0.3; //0.0004;
-    public static double xi = 0;  //0.0004;
-    public static double yp = 0.06; //0.00005; // 0.00005
-    public static double yd = 0.3; //0.0004; // 0.0004
-    public static double yi = 0; //0.0004;
-    public static double rp = -2; //0.00005;
-    public static double rd = -0.4; //0.0004;
-    public static double ri = 0; //0.0004;
-    private class PIDThread
-    {
-
-        private Encoders encoders = new Encoders(0, 0, 0);
-        private PID py, px, pr = null;
-        boolean MOVING = true;
-        protected double[] left = {
-                1,  -1,
-                -1,  1
-        };
-        protected double[] back = {
-                -1, -1,
-                -1, -1
-        };
-        protected double[] clock = {
-                -1,  1,
-                -1,  1
-        };
-        Pose pose = new Pose(0, 0, 0);
-        Pose roboTargetVectors = new Pose(0, 0, 0);
-        Pose fieldTargetVectors = new Pose(0, 0, 0);
-        Pose fieldTargetPose = new Pose(0, 0, 0);
-
-        FtcDashboard dashboard = null;
-        Telemetry tele = null;
-
-
-        double dx = 0;
-        double dy = 0;
-        double dr = 0;
-        double ecenter = 0;
-        double eleft = 0;
-        double eright = 0;
-        double lastCenter = 0;
-        double lastLeft = 0;
-        double lastRight = 0;
-
-        double deltaCenter = 0;
-        double deltaRight = 0;
-        double deltaLeft = 0;
-
-
-        public void start() {
-
-            py = new PID(yp, yi, yd, false); // don't need to correct for sensor jitter because we are using encoders
-            py.init(pose.y);
-            px = new PID(xp, xi, xd, false); // -0.025, -0.00008, -0.2
-            px.init(pose.x);
-            pr = new PID(rp, ri, rd, false); // -0.025, -0.00008, -0.2
-            pr.init(pose.r);
-            if (!TESTING) {
-                dashboard = FtcDashboard.getInstance();
-                tele = FtcDashboard.getInstance().getTelemetry();
-                ecenter = motorFrontLeft.getCurrentPosition();
-                eleft = -motorBackLeft.getCurrentPosition();
-                eright = motorBackRight.getCurrentPosition();
-                lastCenter = ecenter;
-                lastLeft = eleft;
-                lastRight = eright;
-            }
-
-        }
-        // called when tread.start is called. thread stays in loop to do what it does until exit is
-        // signaled by main code calling thread.interrupt.
-        public void setTestPoses(Pose pos, Pose target){
-            fieldTargetPose = target;
-            pose = pos;
-        }
-        public void setMovement(boolean movement) {
-            MOVING = movement;
-            if (!MOVING) {
-                motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                motorStop();
-            }
-            else {
-                motorFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                motorBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                motorFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-            }
-        }
-        public Pose tick() {
-            // we record the Y values in the main class to make showing them in telemetry
-            // easier.
-
-            // TODO: add dimension for rotation, will involve calculating x/y with rotation
-            //  in mind thus a combination of current x/y encoder readings. We want to
-            //  maintain an absolute positioning system (field centric)
-
-            if (!TESTING) {
-                fieldTargetPose.x = xTarget; // in (experimentally obtained)
-                fieldTargetPose.y = yTarget; // in
-                fieldTargetPose.r = rTarget; // radians
-
-                px.setConsts(xp, xi, xd);
-                py.setConsts(yp, yi, yd);
-                pr.setConsts(rp, ri, rd);
-            }else {
-
-                px.setConsts(1, 0, 0);
-                py.setConsts(1, 0, 0);
-                pr.setConsts(1, 0, 0);
-            }
-
-            px.setTarget(fieldTargetPose.x);
-            py.setTarget(fieldTargetPose.y);
-            pr.setTarget(fieldTargetPose.r);
-
-
-
-            double[] out = {0, 0, 0, 0};
-            double ex = px.tick(pose.x);
-            double ey = py.tick(pose.y);
-            double er = pr.tick(pose.r);
-
-            fieldTargetVectors.x = ex;
-            fieldTargetVectors.y = ey;
-            fieldTargetVectors.r = er;
-
-            roboTargetVectors = fieldTargetVectors.getPoseRobotCentric(pose.r);
-
-            // roboTargetVectors.setPose(roboTargetVectors.x , roboTargetVectors.y, roboTargetVectors.r);
-
-            if (TESTING) return roboTargetVectors;
-
-
-            tele.addData("ex", ex);
-            tele.addData("ey", ey);
-            tele.addData("er", er);
-
-            TelemetryPacket packet = new TelemetryPacket();
-            packet.fieldOverlay()
-                    .strokeCircle(pose.y, pose.x, 10).strokeLine(pose.y, pose.x, pose.y + 7*cos(pose.r), pose.x + 7*sin(pose.r));
-            dashboard.sendTelemetryPacket(packet);
-            packet.fieldOverlay()
-                    .strokeCircle(fieldTargetPose.y, fieldTargetPose.x, 3);
-            dashboard.sendTelemetryPacket(packet);
-
-            tele.addData("rex", roboTargetVectors.x);
-            tele.addData("rey", roboTargetVectors.y);
-            tele.addData("rer", roboTargetVectors.r);
-
-            for (int i = 0; i<out.length; i++) { // add the individual vectors
-                out[i] = roboTargetVectors.x * this.left[i] + roboTargetVectors.y * this.back[i] + roboTargetVectors.r * this.clock[i];
-            }
-
-            // TODO: is there anything wrong with linear scaling (dividing by greatest value) here?
-            double abc = absmac(out); // get max value for scaling
-            if (abc > 1){
-                for (int i = 0; i<out.length; i++){ // normalize based on greatest value
-                    out[i] /= abs(abc);
-                }
-            }
-
-            for (int i = 0; i<out.length; i++) out[i] *= scalar;
-            for (int i = 0; i<out.length; i++) if (abs(out[i]) < stalPower) out[i] = 0;
-
-            if (!TESTING && MOVING) driveVector(out);
-
-            // update vals
-            updateEncoders();
-
-                    /*
-                    encoders
-                               f
-                     ______________________
-                     |                    |
-                     |         b >        |
-                     |  ^      fl         |
-                  r  |  a bl       br c   |  l
-                     |                v   |
-                     |____________________|
-                                b
-                          view from top
-                     */
-
-
-
-            ecenter = motorFrontLeft.getCurrentPosition();
-            eleft = -motorBackLeft.getCurrentPosition();
-            eright = motorBackRight.getCurrentPosition();
-
-            tele.addData("d", eright - eleft);
-            // new copied math :)
-            deltaLeft = eleft - lastLeft;
-            deltaRight = eright - lastRight;
-            deltaCenter = ecenter - lastCenter;
-            // odometry solution: GET MIRRORED ODOMETRY PODS (im so stupid :/)
-            double phi = (deltaLeft - deltaRight) / trackwidth;
-
-            double delta_middle_pos = (deltaLeft + deltaRight) / 2;
-            double delta_perp_pos = deltaCenter - forward_offset * phi;
-
-            double delta_y = delta_middle_pos * cos(pose.r) - delta_perp_pos * sin(pose.r);
-            double delta_x = delta_middle_pos * sin(pose.r) + delta_perp_pos * cos(pose.r);
-
-            pose.setPose(pose.x + delta_x * 96 / 164386.368 * 144 / 149.9566615577327, pose.y + delta_y * 120.3 / 213441.556 * 144 / 144.68928366141162, pose.r + phi * (4*PI / 22658.894070619575) *(20*PI / 63.92351749263598) * (40*PI / 122.35421285146982));
-
-            lastCenter = ecenter;
-            lastLeft = eleft;
-            lastRight = eright;
-
-
-            tele.addData("px", pose.x);
-            tele.addData("py", pose.y);
-            tele.addData("pr", pose.r);
-
-            tele.update();
-            return roboTargetVectors;
-
-
-        }
-        public Encoders getEncoders(){
-            updateEncoders();
-            return encoders;
-        }
-        public Pose getPose() {
-            return pose;
-        }
-        public int[] isDone() {
-            return new int[]{px.isDone(), py.isDone(), pr.isDone()};
-        }
-        public void updateEncoders(){
-            try {
-                encoders.right = motorBackLeft.getCurrentPosition();
-                encoders.left = -motorBackRight.getCurrentPosition();
-                encoders.center = motorFrontLeft.getCurrentPosition();
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-    }
 }

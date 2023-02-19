@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.comp.robot.Odo.Odo;
+import org.firstinspires.ftc.teamcode.comp.robot.Odo.Lenny;
 
 @Autonomous
 @Config
@@ -15,7 +15,7 @@ public class FakeAuto extends LinearOpMode {
     public static double r = 0;
     public int currentMovementID = 0;
     public static boolean movement = true;
-    Odo bot = new Odo();
+    Lenny bot = new Lenny();
 
     public void runOpMode() {
         bot.init(hardwareMap);

@@ -1,0 +1,40 @@
+START SIDEWAYS WITH CAM ON SIDE
+1 SETUP
+    1 Scan signal
+    2 Grab preload
+        1 close claw
+        2 rotate arm up to get cone through slides
+    2.5 Move Toward signal and Turn (if necessary)
+        1 move forward
+        2 turn 180
+    3 Move to in front of high junction
+    3 rotate to start orientation of spline to cones (if not too wide in rotation to do over 3, do on 4)
+    3 Move preload cone to apropriate location
+        1 slides up to high
+        1 wrist wrist not all the way level (slant for easier placing at found angle)
+        1.5 (when slides above mid) arm down to not all the way level (slant for easier placing at found angle)
+    5 Place Preload Cone On high junction
+        1 open claw
+2 CYCLE
+    1 Put Claw Into Pickup Pos
+        (might want to close claw in this step to make less error prone)
+        1 rotate wrist to vertical
+        2 rotate arm to pickup (level)
+        2 rotate wrist to pickup (level)
+        3 drop slides to corresponding cone height
+    1 Drive spline from junction to stack
+    2 Grab cone from stack
+        1 close claw
+        2 move slides up (not all the way)
+    3 Drive spline to junction from stack
+    3 cone to appropriate position
+        1 move slides to high height
+        1 arm over to not all the way level in place side (slant for easier placing)
+        2 wrist to not all the way level (slant for easier placing)
+    4 place cone
+        1 open claw
+3 PARK
+    1 park!
+        1 move everything to pickup position
+            see 1 above
+        2 drive to indicated value
