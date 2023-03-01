@@ -13,13 +13,17 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.comp.chassis.Meccanum.Meccanum;
 import org.firstinspires.ftc.teamcode.comp.helpers.AprilDet;
+import org.firstinspires.ftc.teamcode.comp.helpers.Heights;
 import org.firstinspires.ftc.teamcode.comp.helpers.PID;
 import org.firstinspires.ftc.teamcode.comp.robot.Robot;
 
@@ -28,13 +32,14 @@ public class Lenny extends Meccanum implements Robot {
     protected HardwareMap hw = null;
 
 
-    public static double maxHeight = 1000; // change to fit slide
-    public static double minHeight = 0; // probably good (maybe just set to 20 so the 10ish off errors are unnoticed)
+    public double maxHeight = 4200; // change to fit slide
+    public double minHeight = 0; // probably good (maybe just set to 20 so the 10ish off errors are unnoticed)
 
     public static double differenceScalar = 0.01; // scales slide tick difference correction intensity
     public static double scaler = 0.008; // scales width of simoid, a const goes along with it so dont change on its own
-    public static double sp = 0.003; // slide kp const
-    public static double slideTar = 0; // target of slide (duh)
+    public static double sp = 0.005; // slide kp const
+    public static double sd = 0; // slide kp const
+    public double currentCone = 5;
 
     public DcMotorEx slideLeft = null;
     public DcMotorEx slideRight = null;
@@ -44,13 +49,14 @@ public class Lenny extends Meccanum implements Robot {
     public Servo wrist = null;
     public Servo claw = null;
 
+    public DistanceSensor dist = null;
+
     SlideThread st = new SlideThread();
     ClawArmWristThread cawt = new ClawArmWristThread();
     AprilDet ad = null;
 
-    @Override
     public void init(HardwareMap hardwareMap) {
-        //super.init(hardwareMap);
+        super.init(hardwareMap);
         // init the class, declare all the sensors and motors and stuff
         // should be called before using class ALWAYS
 
@@ -74,10 +80,14 @@ public class Lenny extends Meccanum implements Robot {
         slideRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         claw = hardwareMap.get(Servo.class, "claw"); // port 2
-        wrist = hardwareMap.get(Servo.class, "clawRotation"); // port 3
-        leftArm = hardwareMap.get(Servo.class, "leftArm"); // port 4
-        rightArm = hardwareMap.get(Servo.class, "rightArm"); // port 5
+        wrist = hardwareMap.get(Servo.class, "wrist"); // port 3
+        leftArm = hardwareMap.get(Servo.class, "armLeft"); // port 4
+        rightArm = hardwareMap.get(Servo.class, "armRight"); // port 5
 
+        leftArm.setDirection(Servo.Direction.REVERSE);
+
+
+        dist = hardwareMap.get(DistanceSensor.class, "dist"); // port 2
         // Meccanum Motors Definition and setting prefs
 
         // motorFrontLeft = (DcMotorEx) hardwareMap.dcMotor.get("motorFrontLeft");
@@ -110,9 +120,12 @@ public class Lenny extends Meccanum implements Robot {
     public void cawtinit() {
         cawt.start();
     }
-    public void detinit() {
+    public void detinit(String webcamName) {
         ad = new AprilDet();
-        ad.init(hw);
+        ad.init(hw, webcamName);
+    }
+    public double getDistance(DistanceUnit units) {
+        return dist.getDistance(units);
     }
 
     /*
@@ -158,20 +171,38 @@ public class Lenny extends Meccanum implements Robot {
     //SLIDES
     public void driveSlides(double power) {
         st.driveSlides(power);
+        SLIDE_TARGETING = false;
+    }
+    public double getSlideHeight() {
+        return st.getSlidesPos();
     }
     public void setSlideTarget(double target) {
         st.setTarget(target);
     }
-
+    public void setSlideTargetDelay(double target, double ms) {
+        st.setSlideTargetDelay(target, ms);
+    }
     // CAWT (Claw Arm Wrist Thread)
     public void setArmTarget(double target) {
         cawt.setArmTarget(target);
+    }
+    public void setSlideMinMax(double min, double max) {
+        st.setMinMax(min, max);
     }
     public void setWristTarget(double target) {
         cawt.setWristTarget(target);
     }
     public void setClawTarget(double target) {
         cawt.setClawTarget(target);
+    }
+    public void setSlideNextCone() {
+        if (currentCone == 5) st.setTarget(Heights.cone5);
+        else if (currentCone == 4) st.setTarget(Heights.cone4);
+        else if (currentCone == 3) st.setTarget(Heights.cone3);
+        else if (currentCone == 2) st.setTarget(Heights.cone2);
+        else if (currentCone == 1) st.setTarget(Heights.cone1);
+        else st.setTarget(Heights.cone);
+        currentCone--;
     }
 
     public boolean isBusy() {
@@ -190,6 +221,7 @@ public class Lenny extends Meccanum implements Robot {
         public double levelArmPlace = 0.24;
         public double beforeSlidesArmPlace = 0.53;
         public double beforeSlidesArmPickup = 0.63;
+        public double armCenter = (beforeSlidesArmPickup + beforeSlidesArmPlace)/2;
 
         // TODO: should make function out of needed values so for some arbitrary clawPos I can extrapolate maxClawBeforeSlidesDistance for Pickup/Placea
         // TODO: NEEDED VALUES: how close the claw hits the slides (each side) if closed and rotating
@@ -199,7 +231,7 @@ public class Lenny extends Meccanum implements Robot {
         public double maxClawOpenBeforeSlidesDistancePickup = 0.8; // GUESS
         public double maxClawOpenBeforeSlidesDistancePlace = 0.36; // GUESS
 
-        public double armTarget = lowArmPickup;
+        public double armTarget = levelArmPlace;
         public double wristTarget = levelWristPickup;
         public double clawTarget = clawOpen;
 
@@ -221,18 +253,18 @@ public class Lenny extends Meccanum implements Robot {
             armTarget = target;
         }
         public void setWristTarget(double target) {
-            armTarget = target;
+            wristTarget = target;
         }
         public void setClawTarget(double target) {
             clawTarget = target;
         }
         // second priority (shoudnt ever conflict tho)
-        boolean CLAW_SAFE = false; // never assume safety until checked, dont leave room for nullpointers
+        boolean CLAW_SAFE = false; // assume safety, dont leave room for nullpointers
         public void setClawPos(double pos) {
             double buffer = 0.03;
-            CLAW_SAFE = beforeSlidesArmPlace - buffer < getArmPos() && getArmPos() < beforeSlidesArmPickup + buffer;
+            claw.setPosition(pos);
             if (CLAW_SAFE) claw.setPosition(pos);
-            else claw.setPosition(clawClosed);
+            else claw.setPosition(clawClosed + 0.07);
 
         }
         // third priority
@@ -244,24 +276,34 @@ public class Lenny extends Meccanum implements Robot {
 
         boolean ARM_THROUGH_SAFE = false; // never assume safety until checked, dont leave room for nullpointers
         boolean ARM_THROUGH_ON_CURRENT = false; // never assume safety until checked, dont leave room for nullpointers
+        double lastPos = 0;
         public void setArmPos(double pos) {
-            double buffer = 0.1; // safety buffer
+            double buffer = 0.05; // safety buffer
             ARM_THROUGH_SAFE = getWristPos() == levelWristPickup || getWristPos() == levelWristPlace;
-            ARM_THROUGH_ON_CURRENT = (getArmPos() < beforeSlidesArmPlace - buffer && pos > beforeSlidesArmPlace - buffer)
-                    || (getArmPos() > beforeSlidesArmPickup + buffer && pos < beforeSlidesArmPickup + buffer);
+            ARM_THROUGH_ON_CURRENT = (getArmPos() > beforeSlidesArmPlace - buffer)
+                    && (getArmPos() < beforeSlidesArmPickup + buffer);
+            if ((lastPos < armCenter && pos > armCenter) || (pos < armCenter && lastPos > armCenter))
+
             if (ARM_THROUGH_SAFE) {
                 // if wrist is in non-obstruc pos (with cone), ARM_THROUGH_SAFE, dont care, set arm to whatever
-                setArmPosBasic(pos);
+                //setArmPosBasic(pos);
             }
-            if (ARM_THROUGH_ON_CURRENT && !ARM_THROUGH_SAFE) {
+            if (ARM_THROUGH_ON_CURRENT) {
                 // if current movement will pass through slides (ARM_THROUGH_ON_CURRENT),
                 //      and wrist in possibly obstructive place (!ARM_THROUGH_SAFE),
                 //      freeze and rotate wrist first
+                CLAW_SAFE = false;
                 WRIST_SAFE = false;
-                setArmPosBasic(getArmPos()); // freeze arm until safe
+                //setArmPosBasic(getArmPos()); // freeze arm until safe
             }
             // otherwise, wrist is safe to do whatever
-            else WRIST_SAFE = true;
+            else {
+                WRIST_SAFE = true;
+                CLAW_SAFE = true;
+            }
+            setArmPosBasic(pos);
+            tele.addData("arm", getArmPos());
+            lastPos = pos;
         }
         private void setArmPosBasic(double pos) {
             // servos are slightly off, this corrects.
@@ -295,6 +337,11 @@ public class Lenny extends Meccanum implements Robot {
         public double rightPos = 0;
         public double errorThreshold = 20;
         public double derivativeThreshold = 1;
+        public double slideTar = 0; // target of slide (duh)
+
+        public double slideTargetDelayMs = 0;
+        public double slideTargetDelay = 0;
+        public ElapsedTime slideTargetTimer = new ElapsedTime();
 
         public double power = 0;
 
@@ -314,14 +361,24 @@ public class Lenny extends Meccanum implements Robot {
         public void start() {
             leftBasePos = slideLeft.getCurrentPosition();
             rightBasePos = slideRight.getCurrentPosition();
+            slideTargetTimer.reset();
 
             slidePID = new PID(0.001, 0, 0, false);
             tele = FtcDashboard.getInstance().getTelemetry();
         }
+        public void setSlideTargetDelay(double target, double ms) {
+            slideTargetDelayMs = ms;
+            slideTargetDelay = target;
+            slideTargetTimer.reset();
+        }
+        public void setMinMax(double min, double max) {
+            minHeight = min;
+            maxHeight = max;
+        }
 
         public void tick() {
 
-            slidePID.setConsts(sp, 0, 0);
+            slidePID.setConsts(sp, 0, sd);
             slidePID.setTarget(slideTar);
             leftPos = slideLeft.getCurrentPosition() - leftBasePos;
             rightPos = slideRight.getCurrentPosition() - rightBasePos;
@@ -341,19 +398,32 @@ public class Lenny extends Meccanum implements Robot {
                 power = slidePID.tick((leftPos + rightPos) / 2);
                 tele.addData("pidpower", power);
             }
+            if (slideTargetDelayMs != 0) {
+                if (slideTargetTimer.milliseconds() > slideTargetDelayMs) {
+                    setTarget(slideTargetDelay);
+                    SLIDE_TARGETING = true;
+                    slideTargetDelayMs = 0;
+                }
+            }
 
             tele.addData("drivingl", minMaxScaler(leftPos, (power + differenceScaler(rightPos - leftPos))));
             tele.addData("drivingr", minMaxScaler(rightPos, (power + differenceScaler(leftPos - rightPos))));
             tele.addData("dl", differenceScaler(rightPos - leftPos));
             tele.addData("dr", differenceScaler(leftPos - rightPos));
+            tele.addData("slides", SLIDE_TARGETING);
+            tele.addData("pos", getSlidesPos());
             tele.update();
+
 
             slideLeft.setPower(minMaxScaler(leftPos, (power + differenceScaler(rightPos - leftPos))));
             slideRight.setPower(minMaxScaler(rightPos, (power + differenceScaler(leftPos - rightPos))));
+
         }
+
         public double minMaxScaler(double x, double power) {
-            return power * (power < 0 ? ((1.3 * 1/(1+pow(E, -scaler*(x-300+minHeight)))) - 0.1) : ((1.3 * 1/(1+pow(E, scaler*(x+300-maxHeight)))) - 0.1));
+            return power * (!SLIDE_TARGETING ? (power < 0 ? ((1.3 * 1/(1+pow(E, -scaler*(x-300+minHeight)))) - 0.1) : ((1.3 * 1/(1+pow(E, scaler*(x+300-maxHeight)))) - 0.1)) : 1);
         }
+
         public double differenceScaler(double difference) {
             return differenceScalar * difference;
         }
@@ -369,6 +439,7 @@ public class Lenny extends Meccanum implements Robot {
 
         public void setTarget(double tar) {
             slideTar = tar;
+            SLIDE_TARGETING = true;
         }
         public boolean isBusy() {
 

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class AprilDet {
 
     public ArrayList<AprilTagDetection> detections = new ArrayList<>();
-    public BotVision bv = new BotVision();
+    public BotVision bv = null;
     public AprilTagDetectionPipeline atdp =  new AprilTagDetectionPipeline(0.166, 578.272, 578.272, 402.145, 221.506);
 
     int numFramesWithoutDetection = 0;
@@ -21,11 +21,12 @@ public class AprilDet {
     final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 2.0f;
     final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 7;
 
-    public void init(HardwareMap hw) {
+    public void init(HardwareMap hw, String webcamName) {
+        bv = new BotVision();
         ElapsedTime et = new ElapsedTime();
         et.reset();
         while (et.milliseconds() < 500);
-        bv.init(hw, atdp);
+        bv.init(hw, atdp, webcamName);
 
 
     }

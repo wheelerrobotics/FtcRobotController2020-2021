@@ -3,19 +3,19 @@ package org.firstinspires.ftc.teamcode.comp.utility;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.comp.robot.Odo.Lenny;
 
 @Config
 @TeleOp
 public class servoTester extends LinearOpMode {
-    public volatile static double s1pos = 1;
-    public volatile static double s3pos = 0;
-    public volatile static double s4pos = 0;
+    public volatile static double claw = 1;
+    public volatile static double arm = 0.66;
+    public volatile static double wrist = 0.93;
+    public volatile static double slides = 0;
 
-    public volatile static boolean rev1 = false;
-    public volatile static boolean rev2 = true;
-    public volatile static boolean rev3 = false;
-    public volatile static boolean rev4 = false;
+    public volatile static double smax = 0;
+    public volatile static double smin = 0; // make sure down isnt up
 
     // claw closed = 0.7 open = 1
     // positions = relative to pickup side
@@ -35,28 +35,25 @@ public class servoTester extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        Lenny l = new Lenny();
 
-        Servo servo1 = hardwareMap.get(Servo.class, "servo1");
-        Servo servo2 = hardwareMap.get(Servo.class, "servo2");
-        Servo servo3 = hardwareMap.get(Servo.class, "servo3");
-        Servo servo4 = hardwareMap.get(Servo.class, "servo4");
-
-
-
+        l.init(hardwareMap);
+        l.slideinit();
+        l.cawtinit();
 
         waitForStart();
 
         while (opModeIsActive()) {
-            servo1.setPosition(s1pos > 0.03 ? s1pos : 0);
-            servo2.setPosition(s1pos-0.03 > 0 ? s1pos-0.03 : 0);
+            l.tick();
+            l.setClawTarget(claw);
+            l.setArmTarget(arm);
+            l.setWristTarget(wrist);
 
-            servo1.setDirection(rev1 ? Servo.Direction.REVERSE : Servo.Direction.FORWARD);
-            servo2.setDirection(rev2 ? Servo.Direction.REVERSE : Servo.Direction.FORWARD);
-            servo3.setPosition(s3pos);
-            servo4.setPosition(s4pos);
+            //l.setSlideTarget(slides);
+            l.setSlideTarget(slides);
 
-            servo3.setDirection(rev3 ? Servo.Direction.REVERSE : Servo.Direction.FORWARD);
-            servo4.setDirection(rev4 ? Servo.Direction.REVERSE : Servo.Direction.FORWARD);
+            l.setSlideMinMax(smin, smax);
+
         }
 
     }

@@ -41,7 +41,7 @@ public class Meccanum implements Chassis {
             -1,  1
     };
 
-    protected BNO055IMU imu = null;
+    public BNO055IMU imu = null;
     protected DistanceSensor distanceBack = null;
     protected DistanceSensor distanceFront = null;
     protected DistanceSensor distanceLeft = null;
@@ -115,7 +115,7 @@ public class Meccanum implements Chassis {
         // used for teleop mode driving wheels with joysticks
 
 
-        double y = -pow(yvec,1); // Remember, this is reversed!
+        double y = pow(yvec,1); // Remember, this is reversed!
         double x = pow(xvec * 1.1,1); // Counteract imperfect strafing
         double rx = pow(spinvec,1);
 

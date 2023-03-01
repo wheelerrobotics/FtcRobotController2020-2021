@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.comp.auto;
 
 import static java.lang.Math.PI;
-import static java.lang.Math.sqrt;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -81,30 +80,18 @@ public class tringleslide extends LinearOpMode {
          */
 
         // Move Toward Signal
-        bot.setClawTarget(Heights.clawClosed);
-        bot.setWristTarget(Heights.levelWristPlace); // TODO: MAKE SURE CAW LOGIC IN PLACE BEFORE RUNNING
-        bot.setArmTarget(Heights.middleSlidesArm);
 
-        // strafe a bit
-        TrajectorySequence oneSixTwoFive = drive.trajectorySequenceBuilder(new Pose2d(35, -61.5, 0))
-                .strafeTo(new Vector2d(35, -70 + 17*sqrt(2)/2))
-                .turn(PI)
-                .lineTo(new Vector2d(35, -15))
-                .addSpatialMarker(new Vector2d(35, -24), () -> {
-                    bot.setSlideTarget(Heights.high);
-                    bot.setArmTarget(Heights.upSlantArmPlace);
-                })
-                .lineToLinearHeading(new Pose2d(32, -5, 5*PI/6))
-                .addSpatialMarker(new Vector2d(32, -5), () -> {})
-                .build();
 
-        TrajectorySequence noTurnAround = drive.trajectorySequenceBuilder(new Pose2d(-35, -61.5, 0))
+        drive = new SampleMecanumDrive(hardwareMap);
+
+
+        TrajectorySequence noTurnAround = drive.trajectorySequenceBuilder(new Pose2d(-35, -61.5, -PI/2))
                 .lineTo(new Vector2d(-35, -15))
                 .addSpatialMarker(new Vector2d(-35, -24), () -> {
-                    bot.setSlideTarget(Heights.high);
+                    bot.setSlideTarget(Heights.highMax);
                     bot.setArmTarget(Heights.upSlantArmPlace);
                 })
-                .lineToLinearHeading(new Pose2d(-32, -5, PI/6))
+                .lineToLinearHeading(new Pose2d(-32, -5, -5*PI/6))
                 .addSpatialMarker(new Vector2d(-32, -5), () -> {
                     bot.setClawTarget(Heights.clawOpen);
                 })
@@ -131,77 +118,39 @@ public class tringleslide extends LinearOpMode {
                 .build();
 
 
-        TrajectorySequence cycleSplineToStackTurnAround = drive.trajectorySequenceBuilder(new Pose2d(32, -5, 5*PI/6))
-                .setReversed(true)
-
-                .addTemporalMarker(0.2, () -> { // maybe make spatial in future
-                    bot.setClawTarget(Heights.clawClosed);
-                    bot.setWristTarget(Heights.levelWristPickup);
-                    bot.setArmTarget(Heights.levelArmPickup);
-                    bot.setSlideTarget(Heights.cone3);
-                })
-
-                .addSpatialMarker(new Vector2d(40, -12), () -> {
-                    bot.setClawTarget(Heights.clawOpen);
-                })
-                .splineTo(new Vector2d(56, -12), 0)
-                .addSpatialMarker(new Vector2d(56, -12), () -> {
-                    bot.setClawTarget(Heights.clawClosed);
-                })
-                .build();
-
         TrajectorySequence cycleSplineToJunction = drive.trajectorySequenceBuilder(cycleSplineToStack.end())
                 .addTemporalMarker(0.2, () -> {
-                    bot.setSlideTarget(Heights.low);
+                    bot.setSlideTarget(Heights.lowMax);
                 })
                 .waitSeconds(0.6) // wait for slide to get to height
                 .setReversed(false)
                 .splineTo(new Vector2d(-32, -5), PI/6)
                 .addSpatialMarker(new Vector2d(-40, -12), () -> {
-                    bot.setSlideTarget(Heights.high);
+                    bot.setSlideTarget(Heights.highMax);
                     bot.setWristTarget(Heights.levelWristPlace);
                     bot.setArmTarget(Heights.upSlantArmPlace);
+                })
+                .addSpatialMarker(new Vector2d(-24, -12), () -> {
+                    bot.setWristTarget(Heights.upSlantWristPlace);
                 })
                 .addSpatialMarker(new Vector2d(-32, -5), () -> {
                     bot.setClawTarget(Heights.clawOpen);
                 })
                 .build();
 
-        TrajectorySequence cycleSplineToJunctionTurnAround = drive.trajectorySequenceBuilder(cycleSplineToStackTurnAround.end())
-                .addTemporalMarker(0.2, () -> {
-                    bot.setSlideTarget(Heights.low);
-                })
-                .waitSeconds(0.6) // wait for slide to get to height
-                .setReversed(false)
-                .splineTo(new Vector2d(32, -5), 5*PI/6)
-                .addSpatialMarker(new Vector2d(40, -12), () -> {
-                    bot.setSlideTarget(Heights.high);
-                    bot.setWristTarget(Heights.levelWristPlace);
-                    bot.setArmTarget(Heights.upSlantArmPlace);
-                })
-                .addSpatialMarker(new Vector2d(32, -5), () -> {
-                    bot.setClawTarget(Heights.clawOpen);
-                })
-                .build();
-
-
-        // strafe more
-
-        // Scan Signal
-
-
-        drive = new SampleMecanumDrive(hardwareMap);
         bot.init(hardwareMap);
         bot.slideinit();
         bot.cawtinit();
 
         waitForStart();
-
+        drive.setPoseEstimate(noTurnAround.start());
+        drive.followTrajectorySequence(noTurnAround);
         while (opModeIsActive()) {
-            if (currentMovementID == 0) {
 
-            }
+
+            drive.update();
         }
+
     }
 
 }

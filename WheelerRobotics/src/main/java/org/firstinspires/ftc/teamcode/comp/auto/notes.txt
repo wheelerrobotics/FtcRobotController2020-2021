@@ -1,0 +1,88 @@
+if lowest start position for arm doesnt work,
+we may need to make a way to position the arm
+reliably somewhere else
+
+make sure to update driver hub software on tuesday
+
+make sure encoders are plugged into fast ports (0,3)
+make sure slides are plugged into slow ports
+
+make sure all servos have enough reach for any position
+make sure servo wires wont get stuck !!!!
+
+
+
+NECESSARY TUNING PROCESS (for tue)
+
+0 Set up mats - 7m
+
+1 LocalizationTest - 5m
+    Run Localization test
+    Drag bot across 90+ in of field tiles 3 times for x & y and average for multiplier
+
+2 TrackingWheelLateralDistanceTuner - 2m
+    Line up bot with mat (prep for 360)
+    right js1 turns bot, turn bot 10x then press Y
+    change LATERAL_DISTANCE to effective lateral distance
+
+    might want to do same with TrackingWheelForwardOffsetTuner
+
+3 Localization Test - 2m
+    make sure nothing is glaringly wrong, drive around
+    go to https://learnroadrunner.com/dead-wheels.html#troubleshooting if trouble
+
+4 ManualFeedforwardTuner - 20m
+    follow https://learnroadrunner.com/feedforward-tuning.html#tuning
+
+5 StraightTest - 5m
+    bot should go 60in, run a few times
+    if trouble, check https://learnroadrunner.com/straight-test.html
+
+6 StrafeTest - 7m
+    bot should go 60in
+    if not, change LATERAL_MULTIPLIER in SampleMecanumDrive.java (line 57) to actual_distance/60
+    rerun and it should be good
+
+7 MaxAngularVelocityTuner - 1m
+    set MAX_ANG_VEL in DriveConstants to spat out value
+    might want to do same with MaxVelocityTuner
+
+8 TrackWidthTuner - 1m // dont know if necessary for odo wheels?
+    will turn 180 deg 5 times, DONT TOUCH
+    use number it spits out as track width
+
+9 TurnTest - 1m
+    pop a 90
+    if not 90, do 180
+    dont care if 90 doesnt work, thats some pid shenanigans we fix later
+
+10 LocalizationTest - 2m
+    Checkpoint to make sure you havent broke everything
+    drive around and make sure it doesnt look like the localization is screwed up
+
+11 PID - 40m
+    1 BackAndForth - 20m
+        use to get coarse gains (values)
+        should be adjusting: HEADING_PID and TRANSLATION_PID in SampleMecanumDrive dropdown
+        HEADING_PID first:
+            increse kP till keeping accurate heading (~8 for them)
+            dont need kD/kI (might want a bit of kD (non-zero, 1 or smth) for keeping vel same with dif voltages)
+        TRANSLATION_PID next:
+            increse kP till keeping accurate heading (~8 for them)
+            dont need kD/kI (might want a bit of kD (non-zero, 1 or smth) for keeping vel same with dif voltages)
+        TAKE VALUES AND COPY INTO SAMPLE MECCANUM DRIVE!!! SAVE THE PID VALUES!!!
+        TAKE VALUES AND COPY INTO SAMPLE MECCANUM DRIVE!!! SAVE THE PID VALUES!!!
+
+
+    1 FollowerPIDTuner - 20m
+        use to get finer gains (values)
+            Repeat baf
+
+12 SplineTest - 2m
+    run spline test and watch as everything definitely runs perfect :)))
+    if some oscillations, p is too high somewhere
+
+13 Celebrate!
+
+14 despair :( when my TurnAround & NoTurnAround opmodes dont 5-cycle immediately
+
