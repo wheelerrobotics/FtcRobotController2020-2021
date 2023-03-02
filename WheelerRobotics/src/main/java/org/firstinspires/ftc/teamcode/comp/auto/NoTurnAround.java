@@ -41,9 +41,9 @@ public class NoTurnAround extends LinearOpMode {
     public static double x = 0;
     public static double y = 0;
     public static double r = 0;
-    public int currentMovementID = -1;
+    public int currentMovementID = -2;
     public int conePos = 0;
-    public TrajectorySequence cycleSplineToJunction = null;
+    public TrajectorySequence cycleSplineToJunction, park, cycleSplineToStack, noTurnAround = null;
 
     boolean NEW_MOVEMENT = true;
     boolean DISTANCE_CORRECT = false;
@@ -64,7 +64,7 @@ public class NoTurnAround extends LinearOpMode {
         bot.slideinit();
         bot.cawtinit();
         //bot.detinit("Webcam 1");
-        //while (bot.getDistance(DistanceUnit.INCH) > 90);
+        while (bot.getDistance(DistanceUnit.INCH) > 90);
 
         drive = new SampleMecanumDrive(hardwareMap);
 
@@ -105,18 +105,18 @@ public class NoTurnAround extends LinearOpMode {
         toStack = new Trajectory(p, profile);
         toJunction = new Trajectory(p2, profile2);
 
-        TrajectorySequence noTurnAround = drive.trajectorySequenceBuilder(new Pose2d(-35, -61.5, PI))
-                .lineTo(new Vector2d(-35, -12)) // drive from start to in front of junction
+        noTurnAround = drive.trajectorySequenceBuilder(new Pose2d(-35, -61.5, PI))
                 .addDisplacementMarker(20, () -> { // move armature to appropriate heights/poses
                     bot.setSlideTarget(Heights.highMin + 200);
-                    bot.setArmTarget(Heights.upSlantArmPlace + 0.05);
+                    bot.setArmTarget(Heights.levelArmPlace);
                     bot.setWristTarget(Heights.upSlantWristPlace + 0.1);
                 })
+                .lineToConstantHeading(new Vector2d(-32, -12)) // drive from start to in front of junction
                 .turn(PI/6)// turn to face junction
                 .lineToConstantHeading(new Vector2d(-28, -4)) // move toward junction so cone catches it
                 .build();
 
-        TrajectorySequence cycleSplineToStack = drive.trajectorySequenceBuilder(noTurnAround.end())
+        cycleSplineToStack = drive.trajectorySequenceBuilder(noTurnAround.end())
                 .addTemporalMarker(0, ()->{
                     bot.setClawTarget(Heights.clawOpen); // drop cone
                 })
@@ -151,7 +151,7 @@ public class NoTurnAround extends LinearOpMode {
                     bot.setWristTarget(Heights.levelWristPlace);
                 })
                 .UNSTABLE_addDisplacementMarkerOffset(20, () -> { // put arm in place position
-                    bot.setArmTarget(Heights.upSlantArmPlace);
+                    bot.setArmTarget(Heights.levelArmPlace);
                 })
                 .UNSTABLE_addDisplacementMarkerOffset(40, () -> { // slant wrist (couldnt do before because would have hit slides when arm moved)
                     bot.setWristTarget(Heights.upSlantWristPlace + 0.05);
@@ -167,7 +167,7 @@ public class NoTurnAround extends LinearOpMode {
 
         waitForStart();
         cooldown.reset();
-        /*bot.setWristTarget(Heights.levelWristPickup); // set wrist to pickup position
+        bot.setWristTarget(Heights.levelWristPickup); // set wrist to pickup position
         bot.setArmTarget(Heights.levelArmPickup); // set arm to pickup position
         bot.setClawTarget(Heights.clawClosed); // close claw around preload cone
         while (cooldown.milliseconds() < 400) bot.tick(); // tick while waiting for precious actions to complete
@@ -176,17 +176,17 @@ public class NoTurnAround extends LinearOpMode {
         while (cooldown.milliseconds() < 1300) bot.tick(); // tick while waiting for precious actions to complete
         bot.setArmTarget(Heights.upSlantArmPlace); // move arm to place position
         bot.tick(); // tick
-        */
+
         cooldown.reset(); // reset cooldown (used for vision timing)
 
-        //while (conePos == 0 && cooldown.milliseconds() < 3000) conePos = bot.getPrincipalTag(); // scan for tag
+        while (conePos == 0 && cooldown.milliseconds() < 3000) conePos = bot.getPrincipalTag(); // scan for tag
         conePos = conePos == 0 ? 3 : conePos; // if no tag detected, default to position closest to terminal
 
         telemetry.addLine(String.format("detected cone in %f seconds", cooldown.seconds())); // print stuff
         telemetry.addLine(String.format("detected cone position %f seconds", (float) conePos)); // print stuff
         telemetry.update(); // print stuff
 
-        TrajectorySequence park = drive.trajectorySequenceBuilder(cycleSplineToJunction.end())
+        park = drive.trajectorySequenceBuilder(cycleSplineToJunction.end())
                 .addTemporalMarker(1, () -> { // put everything in "teleop ready" mode
                     bot.setClawTarget(Heights.clawClosed);
                     bot.setWristTarget(Heights.levelWristPickup);
@@ -200,9 +200,10 @@ public class NoTurnAround extends LinearOpMode {
 
 
         //drive.followTrajectorySequence(noTurnAround);
-        drive.setPoseEstimate(cycleSplineToStack.start());
+        drive.setPoseEstimate(noTurnAround.start());
 
-        drive.followTrajectorySequenceAsync(cycleSplineToStack);
+        drive.followTrajectorySequenceAsync(noTurnAround);
+
         while (opModeIsActive()) {
             drive.update(); // tick roadrunner async
             bot.tick(); // tick ds (daniel system) async
@@ -211,12 +212,12 @@ public class NoTurnAround extends LinearOpMode {
                 currentMovementID++;
                 NEW_MOVEMENT = true;
             }
-            if (NEW_MOVEMENT && false) {
+            if (NEW_MOVEMENT) {
                 //cool alternative booleans:
                 // "13579".contains(valueOf(currentMovementID)) && currentMovementID < 10
                 // "2468".contains(valueOf(currentMovementID)) || currentMovementID == 10 && currentMovementID < 20
 
-                if (DISTANCE_CORRECT) {
+                if (DISTANCE_CORRECT && false) {
                     correctPos(20); // updates x based on distance sensor reads
                 }
                 if (currentMovementID == 0) drive.followTrajectorySequenceAsync(noTurnAround);
@@ -230,11 +231,11 @@ public class NoTurnAround extends LinearOpMode {
                 if (currentMovementID % 2 == 0 &&
                         currentMovementID > 0 &&
                         currentMovementID < 4) drive.followTrajectorySequenceAsync(cycleSplineToJunction);
-                if (currentMovementID == 4) {
+                if (currentMovementID == 10) {
                     updateJunCycle(5);
-                    //drive.followTrajectorySequenceAsync(cycleSplineToJunction);
+                    drive.followTrajectorySequenceAsync(cycleSplineToJunction);
                 }
-                if (currentMovementID == 5) //drive.followTrajectorySequenceAsync(park);
+                if (currentMovementID == 5) drive.followTrajectorySequenceAsync(park);
                 if (currentMovementID == 6) break;
             }
             NEW_MOVEMENT = false;

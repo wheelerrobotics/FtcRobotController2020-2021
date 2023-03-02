@@ -250,6 +250,7 @@ public class Lenny extends Meccanum implements Robot {
             setClawPos(clawTarget);
         }
         public void setArmTarget(double target) {
+            if (target > 0.98) target = 0.98;
             armTarget = target;
         }
         public void setWristTarget(double target) {

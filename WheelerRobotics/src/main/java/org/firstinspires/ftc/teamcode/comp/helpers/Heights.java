@@ -20,16 +20,16 @@ public class Heights {
     public static double clawClosed = 0.7;
     public static double clawClosedNoStrain = 0.76;
     public static double clawOpen = 1;
-    public static double levelWristPlace = 0.722;
+    public static double levelWristPlace = 0.68;
     public static double upSlantWristPlace = 0.77;
     public static double otherSlantWristPlace = 0.65;
 
     public static double levelWristPickup = 0.03;
-    public static double lowArmPickup = -0.1;
+    public static double lowArmPickup = 0.98;
     public static double upSlantArmPlace = 0.1;
-    public static double levelArmPlace = 0.0;
-    public static double levelArmPickup = 1;
+    public static double levelArmPlace = 0;
+    public static double levelArmPickup = 0.8;
     public static double beforeSlidesArmPlace = 0.53;
     public static double beforeSlidesArmPickup = 0.63;
-    public static double middleSlidesArm = 0.5;
+    public static double middleSlidesArm = 0.35;
 }
