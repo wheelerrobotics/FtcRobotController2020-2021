@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.comp.helpers;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -8,16 +9,16 @@ import org.firstinspires.ftc.teamcode.comp.vision.pipelines.AprilTagDetectionPip
 import org.openftc.apriltag.AprilTagDetection;
 
 import java.util.ArrayList;
-
+@Config
 public class AprilDet {
 
     public ArrayList<AprilTagDetection> detections = new ArrayList<>();
     public BotVision bv = null;
     public AprilTagDetectionPipeline atdp =  new AprilTagDetectionPipeline(0.166, 578.272, 578.272, 402.145, 221.506);
-
+    int curConePos = 0;
     int numFramesWithoutDetection = 0;
-    final int DECIMATION_LOW = 1;
-    final int DECIMATION_HIGH = 3;
+    public static int DECIMATION_LOW = 1;
+    public static int DECIMATION_HIGH = 3;
     final float THRESHOLD_HIGH_DECIMATION_RANGE_METERS = 2.0f;
     final int THRESHOLD_NUM_FRAMES_NO_DETECTION_BEFORE_LOW_DECIMATION = 7;
 
@@ -59,8 +60,8 @@ public class AprilDet {
             }
 
         }
-
-        return ((detections != null && detections.size() > 0) ? detections.get(0).id : 0);
+        curConePos = ((detections != null && detections.size() > 0) ? detections.get(0).id : curConePos);
+        return curConePos;
     }
 
 }

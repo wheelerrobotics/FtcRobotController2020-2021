@@ -1,0 +1,294 @@
+[
+	 
+{
+	"spanish" : "atraer"
+	"english" : ["to attract"]
+	"special" : ["--go"]
+}
+{
+	"spanish" : "caer"
+	"english" : ["to fall"]
+	"special" : ["--go"]
+}
+{
+	"spanish" : "poner"
+	"english" : ["to put", "to place"]
+	"special" : ["--go"]
+} 
+{
+	"spanish" : "hacer"
+	"english" : ["to make", "to do"]
+	"special" : ["--go"]
+}
+{
+	"spanish" : "oponer"
+	"english" : ["to oppose"]
+	"special" : ["--go"]
+}
+{
+	"spanish" : "prooponer"
+	"english" : ["to propose"]
+	"special" : ["--go"]
+}
+{
+	"spanish" : "suponer"
+	"english" : ["to suppose"]
+	"special" : ["--go"]
+}
+ 
+{
+	"spanish" : "contraer"
+	"english" : ["to contract"]
+	"special" : ["go"]
+}
+{
+	"spanish" : "distraer"
+	"english" : ["to distract"]
+	"special" : ["go"]
+}
+{
+	"spanish" : "componer"
+	"english" : ["to make up", "to compose"]
+	"special" : ["go"]
+}
+{
+	"spanish" : "rehacer"
+	"english" : ["to remake", "to redo"]
+	"special" : ["go"]
+}
+{
+	"spanish" : "deshacer"
+	"english" : ["to undo"]
+	"special" : ["go"]
+}
+ 
+ 
+ 
+distinguir
+to distinguish (go)
+ 
+salir
+to leave/go out (go)
+ 
+traer
+to bring (go)
+ 
+valer
+to be worth (go)
+ 
+conducir
+to drive (zco)
+ 
+conocer
+to know/meet a person/place (--zco)
+ 
+crecer
+to grow (zco)
+ 
+obedecer
+to obey (zco)
+ 
+Parecer
+To seem (zco)
+ 
+Producir
+To poduce (zco)
+ 
+Traducir
+To translate (zco)
+ 
+Aparecer
+To appear (zco)
+Desaparecer
+To disappear (zco)
+Merecer
+To deserve (zco)
+Ofrecer
+To offer (zco)
+Reducir
+To reduce (zco)
+pertenecer
+to belong (zco)
+reconocer
+to recognize (zco)
+dirigir
+to direct (jo)
+escoger
+to choose (jo)
+exigir
+to demand (--jo)
+proteger
+to protect (jo)
+coger
+to grab/catch (jo)
+recoger
+to pick up (jo)
+concluir
+to conclude (y)
+construir
+to build (y)
+destruir
+to destroy (y)
+huir
+to flee (y)
+incluir
+to include (y)
+influir
+to influence (--y)
+elegir
+to elect (e-ie) (jo)
+seguir
+to follow (e-i) (go)
+conseguir
+to obtain/get (e-i) (go)
+ 
+dar
+to give
+ 
+decir
+to say/tell (e-i) (g0)
+ 
+estar
+to be
+ 
+ser
+to be
+ 
+ir
+to go
+ 
+oír
+to hear (go)
+ 
+tener
+to have
+ 
+venir
+to come (e-ie) (go)
+ 
+torcer
+to twist (o-ue) (z)
+ 
+saber
+to know (info)
+ 
+Caber (yo quepo, tú cabes)
+to fit
+ 
+ver
+to see
+ 
+despedirse (de)
+to say good-bye (e-i)
+ 
+reír(se)
+to laugh (e-i)
+ 
+reñir
+to scold/quarrel (e-i)
+ 
+repetir
+to repeat (e-i)
+ 
+servir
+to serve (e-i)
+ 
+sonreír(se)
+to smile (e-i)
+ 
+vestir(se)
+to dress (e-i)
+ 
+pedir
+to ask for/order (e-i)
+ 
+soñar
+to dream (o-ue)
+ 
+almorzar
+to eat lunch (o-ue)
+ 
+contar
+to count/tell a story (o-ue)
+ 
+costar
+to cost (o-ue)
+devolver
+to return an object (o-ue)
+dormir
+to sleep (o-ue)
+ 
+encontrar
+to find (o-ue)
+ 
+llover
+to rain (o-ue)
+ 
+morir
+to die (o-ue)
+ 
+poder
+to be able to (o-ue)
+ 
+resolver
+to solve (o-ue)
+ 
+volver
+to return (o-ue)
+ 
+recordar
+to remember (o-ue)
+ 
+advertir
+to warn (e-ie)
+ 
+cerrar
+to close (e-ie)
+ 
+comenzar
+to begin/start (e-ie)
+ 
+divertirse
+to have fun (e-ie)
+ 
+empezar
+to start/begin (e-ie)
+ 
+encender
+to light/turn on (e-ie)
+ 
+entender
+to understand (e-ie)
+ 
+mentir
+to lie (e-ie)
+ 
+nevar
+to snow (e-ie)
+ 
+pensar
+to think (e-ie)
+ 
+perder
+to lose (e-ie)
+ 
+querer
+to want/love (e-ie)
+ 
+sentarse
+to sit down (e-ie)
+ 
+sentir
+to regret (e-ie)
+ 
+sentirse
+to feel (e-ie)
+ 
+preferir
+to prefer (e-ie)
+ 
+jugar
+to play a sport (u-ue)
+
+
+}

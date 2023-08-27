@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 // a "simple" class for mapping 2p controller settings
 
-public class ControllerMapLenny implements ControllerMap {
+public class ControllerMapLennyFC implements ControllerMap {
     //CONCEPT
     /*
     GP1
@@ -178,21 +178,6 @@ public class ControllerMapLenny implements ControllerMap {
     public void leftTrigger2() {
 
     }
-
-    boolean botZeroing = false;
-    boolean botWasZeroing = botZeroing;
-
-    public void leftTrigger2(double amount) {
-        if (amount > 0.9) {
-            bot.setSlideMinMax(-1000, 4000);
-            botZeroing = true;
-        }
-        else bot.setSlideMinMax(0, 3900);
-        if (!botZeroing && botWasZeroing)  {
-            bot.zeroSlidePos();
-        }
-        botWasZeroing = botZeroing;
-    }
     boolean coneStackPresets = false;
 
     @Override
@@ -318,7 +303,6 @@ public class ControllerMapLenny implements ControllerMap {
 
         if (gamepad2.left_bumper && !LB2_DOWN) leftBumper2();
         if (gamepad2.right_bumper && !RB2_DOWN) rightBumper2();
-        leftTrigger2(gamepad2.left_trigger);
 
         if (gamepad2.right_trigger > 0) rightTrigger2();
         else coneStackPresets = false;
@@ -343,7 +327,7 @@ public class ControllerMapLenny implements ControllerMap {
     public void checkJoysticks() {
         bot.tick();
 
-        bot.motorDriveXYVectors((armPlace?1:-1) * gamepad1.left_stick_x, (armPlace?-1:1) * gamepad1.left_stick_y,-1 * gamepad1.right_stick_x);
+        bot.fieldCentricDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y,-1 * gamepad1.right_stick_x);
 
         if (!TARGET_SLIDE || gamepad2.left_stick_y != 0) bot.driveSlides(-gamepad2.left_stick_y);
         if (gamepad2.left_stick_y != 0) TARGET_SLIDE = false;

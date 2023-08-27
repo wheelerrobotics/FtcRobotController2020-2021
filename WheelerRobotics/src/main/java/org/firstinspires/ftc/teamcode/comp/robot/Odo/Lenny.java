@@ -32,7 +32,7 @@ public class Lenny extends Meccanum implements Robot {
     protected HardwareMap hw = null;
 
 
-    public double maxHeight = 4200; // change to fit slide
+    public double maxHeight = 3800; // change to fit slide
     public double minHeight = 0; // probably good (maybe just set to 20 so the 10ish off errors are unnoticed)
 
     public static double differenceScalar = 0.01; // scales slide tick difference correction intensity
@@ -54,9 +54,12 @@ public class Lenny extends Meccanum implements Robot {
     SlideThread st = new SlideThread();
     ClawArmWristThread cawt = new ClawArmWristThread();
     AprilDet ad = null;
+    public void teleinit(HardwareMap hardwareMap) {
+        super.init(hardwareMap);
+        init(hardwareMap);
+    }
 
     public void init(HardwareMap hardwareMap) {
-        super.init(hardwareMap);
         // init the class, declare all the sensors and motors and stuff
         // should be called before using class ALWAYS
 
@@ -137,8 +140,7 @@ public class Lenny extends Meccanum implements Robot {
     }
 */
     public int getPrincipalTag(){
-        ad.checkDetections();
-        return ad.getDetected();
+        return ad.checkDetections();
     }
 
 
@@ -271,8 +273,9 @@ public class Lenny extends Meccanum implements Robot {
         // third priority
         boolean WRIST_SAFE = false; // never assume safety until checked, dont leave room for nullpointers
         public void setWristPos(double pos) {
-            if (WRIST_SAFE) wrist.setPosition(pos);
-            else wrist.setPosition(abs(pos - levelWristPickup) > abs(pos - levelWristPlace) ? levelWristPlace : levelWristPickup);
+            //if (WRIST_SAFE) wrist.setPosition(pos);
+            wrist.setPosition(pos);
+            //else wrist.setPosition(abs(pos - levelWristPickup) > abs(pos - levelWristPlace) ? levelWristPlace : levelWristPickup);
         }
 
         boolean ARM_THROUGH_SAFE = false; // never assume safety until checked, dont leave room for nullpointers
@@ -331,6 +334,9 @@ public class Lenny extends Meccanum implements Robot {
             return armBusy && clawBusy && wristBusy;
         }
     }
+    public void zeroSlidePos() {
+        st.zeroSlides();
+    }
     private class SlideThread {
         public double leftBasePos = 0;
         public double rightBasePos = 0;
@@ -375,6 +381,10 @@ public class Lenny extends Meccanum implements Robot {
         public void setMinMax(double min, double max) {
             minHeight = min;
             maxHeight = max;
+        }
+        public void zeroSlides() {
+            leftBasePos = slideLeft.getCurrentPosition();
+            rightBasePos = slideRight.getCurrentPosition();
         }
 
         public void tick() {

@@ -1,16 +1,9 @@
 package org.firstinspires.ftc.teamcode.comp.vision.pipelines;
 
-import static org.checkerframework.checker.units.UnitsTools.min;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 
-import androidx.core.graphics.ColorUtils;
-
-import com.acmerobotics.dashboard.FtcDashboard;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -18,7 +11,6 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class ColorIsolationPipeline extends OpenCvPipeline
 {
@@ -29,10 +21,6 @@ public class ColorIsolationPipeline extends OpenCvPipeline
     int left = 0;
     int right = 0;
     int cmax = 0;
-
-    private final FtcDashboard dash = FtcDashboard.getInstance();
-    private final Telemetry tele = dash.getTelemetry();
-
     // 1, 2, 3 from left to right relative to robot
     private int conePosition = 0;
 
@@ -80,13 +68,10 @@ public class ColorIsolationPipeline extends OpenCvPipeline
             // do something when not processing? idk
         }
 
-        FtcDashboard.getInstance().getTelemetry().update();
         return input;
     }
     public void updateConePos(){
         // update cone position by getting if left/right regions have more detected pixels
-        FtcDashboard.getInstance().getTelemetry().addData("right", right);
-        FtcDashboard.getInstance().getTelemetry().addData("left", left);
         int thresh = 15;
         if (right > thresh && left < right) {
             conePosition = 3;
@@ -95,12 +80,10 @@ public class ColorIsolationPipeline extends OpenCvPipeline
         } else {
             conePosition = 1;
         }
-        FtcDashboard.getInstance().getTelemetry().addLine("Prediction! " + conePosition);
     }
     public HashMap<Integer, HashMap<String, Integer>> getDetections(){
         // get specific detection positions, maybe maxer it later?
 
-        tele.addData("maxes", maxes.toString());
         return maxes;
     }
     public void fromGreatestMax(int cmax){
@@ -112,7 +95,6 @@ public class ColorIsolationPipeline extends OpenCvPipeline
                     newPoint.put("x", e);
                     newPoint.put("y", i);
                     maxes.put(maxes.size(), newPoint);
-                    FtcDashboard.getInstance().getTelemetry().addData("mac", cmax);
                 }
             }
         }
@@ -143,7 +125,7 @@ public class ColorIsolationPipeline extends OpenCvPipeline
         for(int i = 0; i<input.rows(); i+=quality){
             ArrayList<Integer> nowList = new ArrayList<Integer>();
             for(int e = 0; e<input.cols(); e+=quality){
-                ColorUtils.RGBToHSL((int) input.get(i, e)[0], (int) input.get(i, e)[1], (int) input.get(i, e)[2], hsl);
+                // ColorUtils.RGBToHSL((int) input.get(i, e)[0], (int) input.get(i, e)[1], (int) input.get(i, e)[2], hsl);
 
                 if ((hsl[0] > htar-hthresh && hsl[0] < htar+hthresh &&
                         hsl[1] > star-sthresh && hsl[1] < star+sthresh &&
@@ -168,7 +150,7 @@ public class ColorIsolationPipeline extends OpenCvPipeline
         for(int i = 0; i<input.rows(); i+=quality){
             ArrayList<Integer> nowList = new ArrayList<Integer>();
             for(int e = 0; e<input.cols(); e+=quality){
-                ColorUtils.RGBToHSL((int) input.get(i, e)[0], (int) input.get(i, e)[1], (int) input.get(i, e)[2], hsl);
+                // ColorUtils.RGBToHSL((int) input.get(i, e)[0], (int) input.get(i, e)[1], (int) input.get(i, e)[2], hsl);
                 if (hsl[0] > Lhtar-Lhthresh && hsl[0] < Lhtar+Lhthresh &&
                         hsl[1] > Lstar-Lsthresh && hsl[1] < Lstar+Lsthresh &&
                         hsl[2] > Lltar-Llthresh && hsl[2] < Lltar+Llthresh) {
@@ -264,6 +246,6 @@ public class ColorIsolationPipeline extends OpenCvPipeline
 
     @Override
     public void onViewportTapped() {
-        tele.addData("maxes", maxes.toString());
+
     }
 }

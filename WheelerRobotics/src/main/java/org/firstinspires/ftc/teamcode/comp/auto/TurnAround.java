@@ -30,20 +30,22 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.comp.helpers.Heights;
 import org.firstinspires.ftc.teamcode.comp.robot.Odo.Lenny;
+import org.firstinspires.ftc.teamcode.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 import java.util.Arrays;
 
-@Autonomous(name = "unnormal auto")
+@Autonomous(name = "right auto")
 @Config
 public class TurnAround extends LinearOpMode {
+    public static double con = 0;
     public static double x = 0;
     public static double y = 0;
     public static double r = 0;
-    public int currentMovementID = -1;
+    public int currentMovementID = -2;
     public int conePos = 0;
-    public TrajectorySequence cycleSplineToJunction = null;
+    public TrajectorySequence cycleSplineToJunction, park, cycleSplineToStack, noTurnAround = null;
 
     boolean NEW_MOVEMENT = true;
     boolean DISTANCE_CORRECT = false;
@@ -64,38 +66,37 @@ public class TurnAround extends LinearOpMode {
         bot.slideinit();
         bot.cawtinit();
         bot.detinit("Webcam 1");
-        while (bot.getDistance(DistanceUnit.INCH) > 90);
+        //while (bot.getDistance(DistanceUnit.INCH) > 90);
 
         drive = new SampleMecanumDrive(hardwareMap);
-        drive.setPoseEstimate(new Pose2d(-35, -61.5, PI));
 
         //correctPos(70);
 
 
-        SplineInterpolator si = new SplineInterpolator(-PI/6, 0, -0.1, 0.01, 0., -0.00);
-        QuinticSpline s = new QuinticSpline(new QuinticSpline.Knot(28, -4, 30, -33, -30, -6),
-                new QuinticSpline.Knot(60, -12, -10, -0, 0.1, -0), 0.001, 1000, 1000);
+        SplineInterpolator si = new SplineInterpolator(5*PI/4, PI, -0.1, 0.01, 0., -0.00);
+        QuinticSpline s = new QuinticSpline(new QuinticSpline.Knot(-27, -1, -30, -33, 30, -6),
+                new QuinticSpline.Knot(-57, -10, 10, -0, -0.1, -0), 0.001, 1000, 1000);
         PathSegment seg = new PathSegment(s, si);
         Path p = new Path(seg);
         MotionProfile profile = MotionProfileGenerator.generateSimpleMotionProfile(
-                new MotionState(0, 0, 0),
-                new MotionState(60, 10, 0),
+                new MotionState(0, 0, 10),
+                new MotionState(60, 0, -10),
                 30,
                 30,
-                100
+                70
         );
 
-        SplineInterpolator si2 = new SplineInterpolator( 0,-PI/6, 0., 0.00001, -0.001, -0.01);
-        QuinticSpline s2 = new QuinticSpline(new QuinticSpline.Knot(62, -12, -10, -0, 0.1, -0),
-                new QuinticSpline.Knot(28, -4, -0, 33, -30, -6), 0.001, 1000, 1000);
+        SplineInterpolator si2 = new SplineInterpolator( PI,5*PI/4, 0., 0.00001, -0.001, -0.01);
+        QuinticSpline s2 = new QuinticSpline(new QuinticSpline.Knot(-62, -12, 10, -0, -0.1, -0),
+                new QuinticSpline.Knot(-27, -1, 0, 33, 30, -6), 0.001, 1000, 1000);
         PathSegment seg2 = new PathSegment(s2, si2);
         Path p2 = new Path(seg2);
         MotionProfile profile2 = MotionProfileGenerator.generateSimpleMotionProfile(
-                new MotionState(0, 0, 0),
-                new MotionState(60, 0, 0),
+                new MotionState(0, 0, 10),
+                new MotionState(60, 0, -10),
                 30,
                 30,
-                100
+                5
         );
         TrajectoryVelocityConstraint velConstraint = new MinVelocityConstraint(Arrays.asList(
                 new TranslationalVelocityConstraint(30),
@@ -106,25 +107,31 @@ public class TurnAround extends LinearOpMode {
         toStack = new Trajectory(p, profile);
         toJunction = new Trajectory(p2, profile2);
 
-        TrajectorySequence noTurnAround = drive.trajectorySequenceBuilder(new Pose2d(-35, -61.5, 0))
-                .setReversed(true)
-                .lineTo(new Vector2d(35, -12)) // drive from start to in front of junction
-                .addSpatialMarker(new Vector2d(35, -28), () -> { // move armature to appropriate heights/poses
-                    bot.setSlideTarget(Heights.highMin + 200);
-                    bot.setArmTarget(Heights.upSlantArmPlace + 0.05);
-                    bot.setWristTarget(Heights.upSlantWristPlace + 0.1);
+
+
+        noTurnAround = drive.trajectorySequenceBuilder(new Pose2d(35, -61.5, 0))
+                .addDisplacementMarker(20, () -> { // move armature to appropriate heights/poses
+                    bot.setSlideTarget(Heights.highMax - 750);
+                    bot.setArmTarget(Heights.levelArmPlace);
+                    bot.setWristTarget(Heights.upSlantWristPlace);
                 })
-                .turn(PI/6)// turn to face junction
-                .lineToConstantHeading(new Vector2d(28, -4)) // move toward junction so cone catches it
+                .lineToConstantHeading(new Vector2d(35, -12)) // drive from start to in front of junction
+                .turn(-PI/4)// turn to face junction
+                .lineTo(new Vector2d(32, -4.5),
+                        SampleMecanumDrive.getVelocityConstraint(20, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(15))
                 .build();
 
-        TrajectorySequence cycleSplineToStack = drive.trajectorySequenceBuilder(noTurnAround.end())
+
+
+
+        cycleSplineToStack = drive.trajectorySequenceBuilder(noTurnAround.end())
                 .addTemporalMarker(0, ()->{
                     bot.setClawTarget(Heights.clawOpen); // drop cone
                 })
-                .waitSeconds(0.4) // wait for cone to fall
-                .setReversed(true) // stop reversage if coming from tojun
-                .UNSTABLE_addDisplacementMarkerOffset(3, () -> { // reset arm/wrist/claw/slides to pickup poses
+                .waitSeconds(0.5) // wait for cone to fall
+                .setReversed(false) // stop reversage if coming from tojun
+                .UNSTABLE_addDisplacementMarkerOffset(10, () -> { // reset arm/wrist/claw/slides to pickup poses
                     bot.setClawTarget(Heights.clawClosed);
                     bot.setWristTarget(Heights.levelWristPickup);
                     bot.setArmTarget(Heights.levelArmPickup);
@@ -133,41 +140,44 @@ public class TurnAround extends LinearOpMode {
                 .UNSTABLE_addDisplacementMarkerOffset(15, () -> { // open claw to get ready to pickup cone from stack
                     bot.setClawTarget(Heights.clawOpen);
                 })
-                .addTrajectory(toStack) // move in custom spline towards stack
+                .lineToLinearHeading(new Pose2d(35, -12, 0))
+                .lineToConstantHeading(new Vector2d(56, -12))
+                //.addTrajectory(toStack) // move in custom spline towards stack
                 .build();
 
         cycleSplineToJunction = drive.trajectorySequenceBuilder(toStack.end()) // might be better as cycleSplineToStack.end
-                .lineToConstantHeading(new Vector2d(62, -12)) // move towards stack from detected position
-                .addSpatialMarker(new Vector2d(62, -12), () -> { // grab cone
+                .lineToConstantHeading(new Vector2d(61.5, -11))
+                .addTemporalMarker(0.5, () -> {
                     bot.setClawTarget(Heights.clawClosed);
                 })
-                .waitSeconds(0.6) // wait so that the claw closes before lifting the cone
-                .setReversed(false)
+                .addTemporalMarker(1, () -> {
+                    bot.setSlideTarget(Heights.lowMax);
+                })
+                .waitSeconds(1.5)
+                .setReversed(true)
 
-                .UNSTABLE_addDisplacementMarkerOffset(1, () -> {
-                    bot.setSlideTarget(Heights.lowMax); // lift cone off stack
-                })
-                .UNSTABLE_addDisplacementMarkerOffset(3,() -> { // put slides/wrist to place position
-                    bot.setSlideTarget(Heights.highMin);
+                .UNSTABLE_addDisplacementMarkerOffset(3,() -> {
+                    bot.setSlideTarget(Heights.highMax - 750);
                     bot.setClawTarget(Heights.clawClosed);
-                    bot.setWristTarget(Heights.levelWristPlace);
-                })
-                .UNSTABLE_addDisplacementMarkerOffset(20, () -> { // put arm in place position
                     bot.setArmTarget(Heights.upSlantArmPlace);
                 })
-                .UNSTABLE_addDisplacementMarkerOffset(40, () -> { // slant wrist (couldnt do before because would have hit slides when arm moved)
-                    bot.setWristTarget(Heights.upSlantWristPlace + 0.05);
+                .UNSTABLE_addDisplacementMarkerOffset(20, () -> {
+                    bot.setWristTarget(Heights.levelWristPlace);
+
                 })
-                .addTrajectory(toJunction) // move in custom spline to junction
+                .lineToConstantHeading(new Vector2d(35, -12))
+                .turn(-PI/4)
+                .lineToConstantHeading(new Vector2d(32, -1.5)) // maybe set to 30
                 // NOTE: might need to manually update position after this custom spline
-                .build();
+                .build(); // move in custom spline to junction
+        // NOTE: might need to manually update position after this custom spline
 
 
         ElapsedTime cooldown = new ElapsedTime();
         telemetry.addLine(String.format("inited in %f seconds", cooldown.seconds()));
         telemetry.update();
 
-        waitForStart();
+        while (opModeInInit()); // do nothing
         cooldown.reset();
         bot.setWristTarget(Heights.levelWristPickup); // set wrist to pickup position
         bot.setArmTarget(Heights.levelArmPickup); // set arm to pickup position
@@ -175,9 +185,10 @@ public class TurnAround extends LinearOpMode {
         while (cooldown.milliseconds() < 400) bot.tick(); // tick while waiting for precious actions to complete
         bot.setWristTarget(Heights.levelWristPlace); // rotate cone so it is ready to place
         bot.setSlideTarget(Heights.lowMin); // move cone up so it doesnt hit ground when rotating
-        while (cooldown.milliseconds() < 900) bot.tick(); // tick while waiting for precious actions to complete
+        while (cooldown.milliseconds() < 1300) bot.tick(); // tick while waiting for precious actions to complete
         bot.setArmTarget(Heights.upSlantArmPlace); // move arm to place position
         bot.tick(); // tick
+
         cooldown.reset(); // reset cooldown (used for vision timing)
 
         while (conePos == 0 && cooldown.milliseconds() < 3000) conePos = bot.getPrincipalTag(); // scan for tag
@@ -187,18 +198,30 @@ public class TurnAround extends LinearOpMode {
         telemetry.addLine(String.format("detected cone position %f seconds", (float) conePos)); // print stuff
         telemetry.update(); // print stuff
 
-        TrajectorySequence park = drive.trajectorySequenceBuilder(cycleSplineToJunction.end())
+        park = drive.trajectorySequenceBuilder(cycleSplineToJunction.end())
+                .addTemporalMarker(0.5, () -> {
+                    bot.setClawTarget(Heights.clawOpen);
+                })
+                .waitSeconds(1)
                 .addTemporalMarker(1, () -> { // put everything in "teleop ready" mode
                     bot.setClawTarget(Heights.clawClosed);
                     bot.setWristTarget(Heights.levelWristPickup);
                     bot.setArmTarget(Heights.levelArmPickup);
                     bot.setSlideTarget(0);
                 })
-                .lineToLinearHeading(new Pose2d(35, -12, PI)) // go to parking space 2 and turn so doesnt hit junctions when parking
-                .lineTo(new Vector2d((conePos == 1 ? 11.5 : (conePos == 2 ? 35.5 : 61.5)), -12)) // go to parking space
+                .addTemporalMarker(1.6, () -> {
+                    bot.setClawTarget(conePos == 3 ? Heights.clawOpen : Heights.clawClosed);
+
+                })
+                .lineTo(new Vector2d(35, -12))// go to parking space 2 and turn so doesnt hit junctions when parking
+                .turn(PI/4)
+                .lineTo(new Vector2d((conePos == 1 ? 11 : (conePos == 2 ? 35.5 : 61.5)), -10)) // go to parking space
 
                 .build();
 
+
+        //drive.followTrajectorySequence(noTurnAround);
+        drive.setPoseEstimate(noTurnAround.start());
 
         while (opModeIsActive()) {
             drive.update(); // tick roadrunner async
@@ -214,7 +237,9 @@ public class TurnAround extends LinearOpMode {
                 // "2468".contains(valueOf(currentMovementID)) || currentMovementID == 10 && currentMovementID < 20
 
                 if (DISTANCE_CORRECT) {
-                    correctPos(20); // updates x based on distance sensor reads
+                    correctPos(15); // updates x based on distance sensor reads
+                    if (currentMovementID == 1) updateJunCycle(5, 0);
+                    else updateJunCycle(4, 0);
                 }
                 if (currentMovementID == 0) drive.followTrajectorySequenceAsync(noTurnAround);
 
@@ -222,16 +247,20 @@ public class TurnAround extends LinearOpMode {
                         currentMovementID > 0 && // redundant for readability
                         currentMovementID <= 4) {
                     drive.followTrajectorySequenceAsync(cycleSplineToStack);
+
                     DISTANCE_CORRECT = true;
                 }
                 if (currentMovementID % 2 == 0 &&
                         currentMovementID > 0 &&
-                        currentMovementID < 4) drive.followTrajectorySequenceAsync(cycleSplineToJunction);
-                if (currentMovementID == 4) {
-                    updateJunCycle(5);
+                        currentMovementID <= 4) drive.followTrajectorySequenceAsync(cycleSplineToJunction);
+                if (currentMovementID == 10) {
+                    updateJunCycle(5, 0);
                     drive.followTrajectorySequenceAsync(cycleSplineToJunction);
                 }
-                if (currentMovementID == 5) drive.followTrajectorySequenceAsync(park);
+                if (currentMovementID == 5) {
+                    updatePark();
+                    drive.followTrajectorySequenceAsync(park);
+                }
                 if (currentMovementID == 6) break;
             }
             NEW_MOVEMENT = false;
@@ -243,78 +272,101 @@ public class TurnAround extends LinearOpMode {
     public void correctPos(int x) {
         DISTANCE_CORRECT = false;
         double distance = 0;
+        ElapsedTime timeout = new ElapsedTime();
+        timeout.reset();
         for (int i = 0; i< x; i++) {
             double td = 100;
-            while (td > 50) td = bot.getDistance(DistanceUnit.INCH);
+            while (td > 20 || timeout.milliseconds() > 800) td = bot.getDistance(DistanceUnit.INCH);
             distance += td;
         }
+        if (timeout.milliseconds() > 800) return;
         distance /= x;
         telemetry.addData("dist", distance);
         telemetry.update();
 
-        double rot = bot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS).firstAngle + PI;
+        double rot = bot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS).firstAngle+con;
         double coser = cos(rot);
 
-        drive.setPoseEstimate(new Pose2d(72 - (distance) - (FIRST_CORRECT ? 5.8 : 1.5), drive.getPoseEstimate().getY(), rot));
-        updateJunCycle(0);
+        drive.setPoseEstimate(new Pose2d(72 - (distance) - 1.8, drive.getPoseEstimate().getY(), rot));
+        updateJunCycle(0, 0);
         FIRST_CORRECT = false;
     }
-    public void updateJunCycle(double n) {
-        if (n ==0) {
+    public void updatePark() {
+        park = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
+                .addTemporalMarker(0.5, () -> {
+                    bot.setClawTarget(Heights.clawOpen);
+                })
+                .waitSeconds(1)
+                .addTemporalMarker(1, () -> { // put everything in "teleop ready" mode
+                    bot.setClawTarget(Heights.clawClosed);
+                    bot.setWristTarget(Heights.levelWristPickup);
+                    bot.setArmTarget(Heights.levelArmPickup);
+                    bot.setSlideTarget(0);
+                })
+                .addTemporalMarker(1.6, () -> {
+                    bot.setClawTarget(conePos == 3 ? Heights.clawOpen : Heights.clawClosed);
 
-            cycleSplineToJunction = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                    .lineToConstantHeading(new Vector2d(62, -12))
-                    .addSpatialMarker(new Vector2d(62, -12), () -> {
-                        bot.setClawTarget(Heights.clawClosed);
-                    })
-                    .waitSeconds(1)
-                    .setReversed(true)
+                })
+                .lineTo(new Vector2d(35, -12))// go to parking space 2 and turn so doesnt hit junctions when parking
+                .turn(PI/4)
+                .lineTo(new Vector2d((conePos == 1 ? 11 : (conePos == 2 ? 35.5 : 61.5)), -10)) // go to parking space
 
-                    .UNSTABLE_addDisplacementMarkerOffset(1, () -> {
-                        bot.setSlideTarget(Heights.lowMax);
-                    })
-                    .UNSTABLE_addDisplacementMarkerOffset(3,() -> {
-                        bot.setSlideTarget(Heights.highMin);
-                        bot.setClawTarget(Heights.clawClosed);
-                        bot.setWristTarget(Heights.levelWristPlace);
-                    })
-                    .UNSTABLE_addDisplacementMarkerOffset(20, () -> {
-                        bot.setArmTarget(Heights.upSlantArmPlace);
-                    })
-                    .UNSTABLE_addDisplacementMarkerOffset(40, () -> {
-                        bot.setWristTarget(Heights.upSlantWristPlace + 0.05);
-                    })
-                    .addTrajectory(toJunction)
-                    // NOTE: might need to manually update position after this custom spline
-                    .build();
-        }
+                .build();
+    }
+    public void updateJunCycle(double n, double addition) {
         if (n == 5) {
             cycleSplineToJunction = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
-                    .lineToConstantHeading(new Vector2d(62, -12))
-                    .addSpatialMarker(new Vector2d(62, -12), () -> {
+                    //.lineToConstantHeading(new Vector2d(-62, -8))
+                    .lineToConstantHeading(new Vector2d(62, -10))
+                    .addTemporalMarker(0.5, () -> {
                         bot.setClawTarget(Heights.clawClosed);
                     })
-                    .waitSeconds(1)
-                    .setReversed(true)
-
-                    .UNSTABLE_addDisplacementMarkerOffset(1, () -> {
+                    .addTemporalMarker(0.8, () -> {
                         bot.setSlideTarget(Heights.lowMax);
                     })
+                    .waitSeconds(0.8)
+                    .setReversed(true)
                     .UNSTABLE_addDisplacementMarkerOffset(3,() -> {
-                        bot.setSlideTarget(Heights.highMin);
+                        bot.setSlideTarget(Heights.highMax - 880);
                         bot.setClawTarget(Heights.clawClosed);
-                        bot.setWristTarget(Heights.levelWristPlace);
-                    })
-                    .UNSTABLE_addDisplacementMarkerOffset(20, () -> {
                         bot.setArmTarget(Heights.upSlantArmPlace);
                     })
-                    .UNSTABLE_addDisplacementMarkerOffset(40, () -> {
-                        bot.setWristTarget(Heights.upSlantWristPlace + 0.05);
+                    .UNSTABLE_addDisplacementMarkerOffset(20, () -> {
+                        bot.setWristTarget(0.1);
+
                     })
-                    .addTrajectory(toJunction)
+                    .lineToConstantHeading(new Vector2d(35, -12))
+                    .lineToLinearHeading(new Pose2d(29, -5, -PI/4 - 0.1))
                     // NOTE: might need to manually update position after this custom spline
                     .build();
         }
+        if (n == 4) {
+            cycleSplineToJunction = drive.trajectorySequenceBuilder(drive.getPoseEstimate())
+                    //.lineToConstantHeading(new Vector2d(-62, -8))
+                    .lineToConstantHeading(new Vector2d(62, -12))
+                    .addTemporalMarker(0.5, () -> {
+                        bot.setClawTarget(Heights.clawClosed);
+                    })
+                    .addTemporalMarker(0.8, () -> {
+                        bot.setSlideTarget(Heights.lowMax);
+                    })
+                    .waitSeconds(0.8)
+                    .setReversed(true)
+                    .UNSTABLE_addDisplacementMarkerOffset(3,() -> {
+                        bot.setSlideTarget(Heights.highMax - 880);
+                        bot.setClawTarget(Heights.clawClosed);
+                        bot.setArmTarget(Heights.upSlantArmPlace);
+                    })
+                    .UNSTABLE_addDisplacementMarkerOffset(20, () -> {
+                        bot.setWristTarget(0.1);
+
+                    })
+                    .lineToConstantHeading(new Vector2d(35, -10.5))
+                    .lineToLinearHeading(new Pose2d(27.5, -5, -PI/4 - 0.1))
+                    // NOTE: might need to manually update position after this custom spline
+                    .build();
+        }
+
     }
 
 }

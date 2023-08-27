@@ -3,12 +3,12 @@ package org.firstinspires.ftc.teamcode.comp.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.comp.controller.Odo.ControllerMapLenny;
+import org.firstinspires.ftc.teamcode.comp.controller.Odo.ControllerMapLennyFC;
 import org.firstinspires.ftc.teamcode.comp.robot.Odo.Lenny;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
-@TeleOp(name="lop")
-public class lop extends LinearOpMode {
+@TeleOp(name="lop field center")
+public class lopfc extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -23,7 +23,7 @@ public class lop extends LinearOpMode {
         l.teleinit(hardwareMap);
 
 
-        ControllerMapLenny cml = new ControllerMapLenny();
+        ControllerMapLennyFC cml = new ControllerMapLennyFC();
         cml.init(l, drive, gamepad1, gamepad2);
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
