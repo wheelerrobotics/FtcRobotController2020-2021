@@ -24,7 +24,7 @@ public class lop extends LinearOpMode {
 
 
         ControllerMapLenny cml = new ControllerMapLenny();
-        cml.init(l, drive, gamepad1, gamepad2);
+        cml.init(l, gamepad1, gamepad2);
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 

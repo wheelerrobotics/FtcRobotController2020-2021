@@ -60,10 +60,10 @@ public class ControllerMapLenny implements ControllerMap {
         gamepad1 = gp1;
         gamepad2 = gp2;
     }
-
-    @Override
-    public void init(Robot robot, Gamepad gp1, Gamepad gp2) {
-
+    public void init(Robot robot, Gamepad gp1, Gamepad gp2){
+        bot = (Lenny) robot;
+        gamepad1 = gp1;
+        gamepad2 = gp2;
     }
 
     @Override
